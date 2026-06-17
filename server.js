@@ -132,6 +132,95 @@ app.delete('/api/clientes/:id', authenticateToken, checkRole(['ADMINISTRADOR']),
   }
 });
 
+app.post('/api/clientes/importar-masivo', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+  const records = req.body;
+  if (!Array.isArray(records)) {
+    return res.status(400).json({ error: 'El cuerpo de la petición debe ser una lista de registros.' });
+  }
+
+  try {
+    let clientesCreados = 0;
+    let motosCreadas = 0;
+    let skippedMotos = 0;
+
+    await prisma.$transaction(async (tx) => {
+      for (const row of records) {
+        const { nombreCompleto, email, telefono, moto } = row;
+        if (!nombreCompleto || !moto || !moto.vin) continue;
+
+        // 1. Resolver o crear cliente
+        let cliente = null;
+        if (email) {
+          cliente = await tx.cliente.findFirst({
+            where: {
+              OR: [
+                { email: { equals: email, mode: 'insensitive' } },
+                { nombreCompleto: { equals: nombreCompleto, mode: 'insensitive' } }
+              ]
+            }
+          });
+        } else {
+          cliente = await tx.cliente.findFirst({
+            where: { nombreCompleto: { equals: nombreCompleto, mode: 'insensitive' } }
+          });
+        }
+
+        if (!cliente) {
+          cliente = await tx.cliente.create({
+            data: {
+              nombreCompleto,
+              email: email || null,
+              telefono: telefono || 'N/A'
+            }
+          });
+          clientesCreados++;
+        }
+
+        // 2. Resolver o crear motocicleta
+        const motoExists = await tx.motocicleta.findUnique({
+          where: { vin: moto.vin }
+        });
+
+        if (!motoExists) {
+          const fechaCompra = new Date();
+          const fechaGarantiaLimite = new Date();
+          fechaGarantiaLimite.setFullYear(fechaGarantiaLimite.getFullYear() + 2); // 2 años de garantía por defecto
+
+          await tx.motocicleta.create({
+            data: {
+              clienteId: cliente.id,
+              marca: moto.marca || 'VENTO',
+              modelo: moto.modelo,
+              vin: moto.vin,
+              anio: moto.anio || 2026,
+              color: 'N/A',
+              numeroMotor: 'N/A',
+              kilometraje: 0,
+              fechaCompra,
+              fechaGarantiaLimite,
+              estadoGarantia: 'ACTIVA'
+            }
+          });
+          motosCreadas++;
+        } else {
+          skippedMotos++;
+        }
+      }
+    });
+
+    await logAudit(req.user.id, 'CREATE', 'clientes', 'masivo', `Importación masiva: ${clientesCreados} clientes y ${motosCreadas} motocicletas cargadas (${skippedMotos} motos duplicadas omitidas).`);
+    
+    res.json({
+      success: true,
+      clientesCreados,
+      motosCreadas,
+      skippedMotos
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ==========================================
 // API REST: MOTOCICLETAS (CRUD)
 // ==========================================
