@@ -297,23 +297,99 @@ app.get('/api/ordenes', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/ordenes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION']), async (req, res) => {
-  const { refacciones, ...orderData } = req.body;
-  try {
-    // 1. Generar Folio consecutivo automático
-    const totalCount = await prisma.ordenServicio.count();
-    const currentYear = new Date().getFullYear();
-    const folio = `OS-${currentYear}-${String(totalCount + 1).padStart(4, '0')}`;
+// Helper para limpiar campos adicionales no soportados por Prisma en OrdenServicio
+const filterOrdenData = (body) => {
+  const data = {};
+  
+  if (body.clienteId !== undefined) data.clienteId = body.clienteId;
+  if (body.motocicletaId !== undefined) data.motocicletaId = body.motocicletaId;
+  if (body.tecnicoId !== undefined) data.tecnicoId = body.tecnicoId;
+  if (body.kilometraje !== undefined) data.kilometraje = parseInt(body.kilometraje, 10) || 0;
+  if (body.tipoServicio !== undefined) data.tipoServicio = body.tipoServicio;
+  if (body.descripcionFalla !== undefined) data.descripcionFalla = body.descripcionFalla;
+  if (body.diagnosticoTecnico !== undefined) data.diagnosticoTecnico = body.diagnosticoTecnico;
+  if (body.solucionAplicada !== undefined) data.solucionAplicada = body.solucionAplicada;
+  if (body.firmaCliente !== undefined) data.firmaCliente = body.firmaCliente;
+  if (body.fechaCompromiso !== undefined) data.fechaCompromiso = new Date(body.fechaCompromiso);
+  if (body.fechaEntrega !== undefined) data.fechaEntrega = body.fechaEntrega ? new Date(body.fechaEntrega) : null;
+  if (body.estado !== undefined) data.estado = body.estado;
+  if (body.costoTotal !== undefined) data.costoTotal = parseFloat(body.costoTotal) || 0;
 
-    // 2. Transacción de creación y descuento de inventario
+  return data;
+};
+
+app.post('/api/ordenes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION']), async (req, res) => {
+  const { refacciones, refaccionesUtilizadas, registrarNuevo, nuevoCliente, registrarNuevaMotoParaClienteExistente, nuevaMoto, ...rawBody } = req.body;
+  try {
     const result = await prisma.$transaction(async (tx) => {
+      let clienteId = rawBody.clienteId;
+      let motocicletaId = rawBody.motocicletaId;
+
+      // 1. Registrar Cliente Nuevo al vuelo si aplica
+      if (registrarNuevo && nuevoCliente) {
+        const nc = await tx.cliente.create({
+          data: {
+            nombreCompleto: nuevoCliente.nombreCompleto,
+            telefono: nuevoCliente.telefono,
+            email: nuevoCliente.email || '',
+            direccion: nuevoCliente.direccion || '',
+            rfc: nuevoCliente.rfc || ''
+          }
+        });
+        clienteId = nc.id;
+      }
+
+      // 2. Registrar Motocicleta Nueva al vuelo si aplica
+      if ((registrarNuevo || registrarNuevaMotoParaClienteExistente) && nuevaMoto) {
+        // Asegurar que no esté duplicado el VIN
+        const existingMoto = await tx.motocicleta.findUnique({
+          where: { vin: nuevaMoto.vin.trim().toUpperCase() }
+        });
+        if (existingMoto) {
+          throw new Error(`La motocicleta con número de serie (VIN) ${nuevaMoto.vin} ya se encuentra registrada en el sistema.`);
+        }
+
+        const nm = await tx.motocicleta.create({
+          data: {
+            clienteId: clienteId,
+            marca: nuevaMoto.marca || 'VENTO',
+            modelo: nuevaMoto.modelo,
+            vin: nuevaMoto.vin.trim().toUpperCase(),
+            numeroMotor: nuevaMoto.numeroMotor || '',
+            placas: nuevaMoto.placas || '',
+            color: nuevaMoto.color || 'N/A',
+            kilometraje: parseInt(nuevaMoto.kilometraje, 10) || 0,
+            fechaCompra: nuevaMoto.fechaCompra ? new Date(nuevaMoto.fechaCompra) : new Date(),
+            limiteGarantia: new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000) // 2 años por defecto
+          }
+        });
+        motocicletaId = nm.id;
+      }
+
+      // 3. Generar Folio consecutivo automático
+      const totalCount = await tx.ordenServicio.count();
+      const currentYear = new Date().getFullYear();
+      const folio = `OS-${currentYear}-${String(totalCount + 1).padStart(4, '0')}`;
+
+      // 4. Filtrar y preparar datos de la orden
+      const orderData = filterOrdenData({
+        ...rawBody,
+        clienteId,
+        motocicletaId
+      });
+
+      // 5. Crear la orden de servicio
       const order = await tx.ordenServicio.create({
         data: { ...orderData, folio }
       });
 
-      // Si incluye refacciones consumidas de inicio
-      if (refacciones && refacciones.length > 0) {
-        for (const item of refacciones) {
+      // 6. Descontar stock y registrar refacciones reales
+      const cleanRefacciones = (refacciones || refaccionesUtilizadas || []).filter(
+        item => item.refaccionId && !item.refaccionId.startsWith('COT-ITEM')
+      );
+
+      if (cleanRefacciones.length > 0) {
+        for (const item of cleanRefacciones) {
           // Descontar existencias
           await tx.refaccion.update({
             where: { id: item.refaccionId },
@@ -325,16 +401,61 @@ app.post('/api/ordenes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCI
               ordenId: order.id,
               refaccionId: item.refaccionId,
               cantidad: item.cantidad,
-              precioUnitario: item.precioUnitario
+              precioUnitario: parseFloat(item.precioUnitario) || 0
             }
           });
         }
       }
+
       return order;
     });
 
     await logAudit(req.user.id, 'CREATE', 'ordenes_servicio', result.id, `Apertura de orden: ${result.folio}`);
     res.status(201).json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.put('/api/ordenes/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { refacciones, refaccionesUtilizadas, ...rawBody } = req.body;
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Filtrar y preparar datos de la orden
+      const orderData = filterOrdenData(rawBody);
+
+      // 2. Actualizar la orden de servicio
+      const order = await tx.ordenServicio.update({
+        where: { id },
+        data: orderData
+      });
+
+      // 3. Vincular refacciones si aplica
+      const cleanRefacciones = (refacciones || refaccionesUtilizadas || []).filter(
+        item => item.refaccionId && !item.refaccionId.startsWith('COT-ITEM')
+      );
+
+      if (cleanRefacciones.length > 0) {
+        await tx.ordenRefaccion.deleteMany({ where: { ordenId: id } });
+
+        for (const item of cleanRefacciones) {
+          await tx.ordenRefaccion.create({
+            data: {
+              ordenId: id,
+              refaccionId: item.refaccionId,
+              cantidad: item.cantidad,
+              precioUnitario: parseFloat(item.precioUnitario) || 0
+            }
+          });
+        }
+      }
+
+      return order;
+    });
+
+    await logAudit(req.user.id, 'UPDATE', 'ordenes_servicio', id, `Modificación de orden: ${result.folio}`);
+    res.json(result);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
