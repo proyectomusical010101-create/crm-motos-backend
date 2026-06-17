@@ -1,0 +1,24 @@
+{
+  "name": "crm-servicio-backend",
+  "version": "1.0.0",
+  "description": "Backend de producción para CRM de servicio y garantías de S.R. MotoPartes",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "build": "npx prisma generate"
+  },
+  "prisma": {
+    "seed": "node seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.11.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "prisma": "^5.11.0"
+  }
+}

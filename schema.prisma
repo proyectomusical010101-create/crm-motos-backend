@@ -1,0 +1,258 @@
+// Configuración del Generador de Clientes y Conector de PostgreSQL
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. Catálogo de Roles
+model Rol {
+  id          String    @id @default(uuid())
+  nombre      String    @unique // ADMIN, RECEPCION, TECNICO, ALMACEN, GERENCIA
+  descripcion String?
+  usuarios    Usuario[]
+
+  @@map("roles")
+}
+
+// 2. Usuarios del CRM
+model Usuario {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String        @map("password_hash")
+  nombre       String
+  rolId        String        @map("rol_id")
+  rol          Rol           @relation(fields: [rolId], references: [id])
+  sucursal     String        @default("Matriz Norte")
+  activo       Boolean       @default(true)
+  creadoEn     DateTime      @default(now()) @map("creado_en")
+  auditorias   Auditoria[]
+  movimientos  MovimientoInventario[]
+
+  @@map("usuarios")
+}
+
+// 3. Catálogo de Clientes
+model Cliente {
+  id             String         @id @default(uuid())
+  nombreCompleto String         @map("nombre_completo")
+  telefono       String
+  whatsapp       String?
+  email          String?
+  direccion      String?
+  ciudad         String?
+  estado         String?
+  codigoPostal   String?        @map("codigo_postal")
+  rfc            String?        @unique
+  fechaRegistro  DateTime       @default(now()) @map("fecha_registro")
+  observaciones  String?
+  motocicletas   Motocicleta[]
+  ordenesServicio OrdenServicio[]
+  garantias      Garantia[]
+  cotizaciones   Cotizacion[]
+
+  @@map("clientes")
+}
+
+// 4. Catálogo de Motocicletas
+model Motocicleta {
+  id                  String         @id @default(uuid())
+  clienteId           String         @map("cliente_id")
+  cliente             Cliente        @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  marca               String         // BAJAJ, MB MOTOS, VELOCI MOTORS, VENTO, GAMO, OTRAS
+  modelo              String
+  anio                Int
+  color               String
+  vin                 String         @unique // Número de Chasis
+  numeroMotor         String         @map("numero_motor")
+  placas              String?
+  kilometraje         Int
+  fechaCompra         DateTime       @map("fecha_compra")
+  distribuidorOrigen  String?        @map("distribuidor_origen")
+  fechaGarantiaLimite DateTime       @map("fecha_garantia_limite")
+  estadoGarantia      String         @default("ACTIVA") @map("estado_garantia") // ACTIVA, VENCIDA
+  creadoEn            DateTime       @default(now()) @map("creado_en")
+  ordenesServicio     OrdenServicio[]
+  garantias           Garantia[]
+
+  @@map("motocicletas")
+}
+
+// 5. Personal Técnico
+model Tecnico {
+  id              String         @id @default(uuid())
+  nombre          String
+  especialidad    String
+  telefono        String?
+  correo          String?
+  fechaIngreso    DateTime       @default(now()) @map("fecha_ingreso")
+  activo          Boolean        @default(true)
+  ordenesServicio OrdenServicio[]
+
+  @@map("tecnicos")
+}
+
+// 6. Inventario de Refacciones
+model Refaccion {
+  id           String            @id @default(uuid())
+  codigo       String            @unique
+  descripcion  String
+  marca        String            // BAJAJ, VENTO, etc.
+  categoria    String            // Frenos, Tracción, etc.
+  ubicacion    String?           // Pasillo / Estante
+  existencia   Int
+  stockMinimo  Int               @default(5) @map("stock_minimo")
+  costo        Decimal           @db.Decimal(10, 2)
+  precioVenta  Decimal           @db.Decimal(10, 2) @map("precio_venta")
+  proveedor    String?
+  creadoEn     DateTime          @default(now()) @map("creado_en")
+  ordenes      OrdenRefaccion[]
+  movimientos  MovimientoInventario[]
+
+  @@map("refacciones")
+}
+
+// 7. Órdenes de Servicio en Taller
+model OrdenServicio {
+  id                 String            @id @default(uuid())
+  folio              String            @unique // Generado automáticamente OS-YYYY-XXXX
+  fechaIngreso       DateTime          @default(now()) @map("fecha_ingreso")
+  clienteId          String            @map("cliente_id")
+  cliente            Cliente           @relation(fields: [clienteId], references: [id])
+  motocicletaId      String            @map("motocicleta_id")
+  motocicleta        Motocicleta       @relation(fields: [motocicletaId], references: [id], onDelete: Cascade)
+  kilometraje        Int
+  tecnicoId          String            @map("tecnico_id")
+  tecnico            Tecnico           @relation(fields: [tecnicoId], references: [id])
+  tipoServicio       String            @map("tipo_servicio") // PREVENTIVO, CORRECTIVO, GARANTIA, DIAGNOSTICO, ACCESORIOS, REPARACION
+  descripcionFalla   String            @map("descripcion_falla")
+  diagnosticoTecnico String?           @map("diagnostico_tecnico")
+  solucionAplicada   String?           @map("solucion_aplicada")
+  firmaCliente       String?           @map("firma_cliente") @db.Text // Base64 Canvas
+  fechaCompromiso    DateTime          @map("fecha_compromiso")
+  fechaEntrega       DateTime?         @map("fecha_entrega")
+  estado             String            @default("Recibido") // Recibido, Diagnóstico, En reparación, Esperando refacciones, En garantía, Terminado, Entregado
+  costoTotal         Decimal           @default(0) @map("costo_total") @db.Decimal(10, 2)
+  creadoEn           DateTime          @default(now()) @map("creado_en")
+  refacciones        OrdenRefaccion[]
+  garantias          Garantia[]
+  fotografias        Fotografia[]
+
+  @@map("ordenes_servicio")
+}
+
+// 8. Relación Pivote Refacciones Utilizadas por Orden
+model OrdenRefaccion {
+  ordenId        String        @map("orden_id")
+  orden          OrdenServicio @relation(fields: [ordenId], references: [id], onDelete: Cascade)
+  refaccionId    String        @map("refaccion_id")
+  refaccion      Refaccion     @relation(fields: [refaccionId], references: [id])
+  cantidad       Int
+  precioUnitario Decimal       @map("precio_unitario") @db.Decimal(10, 2)
+
+  @@id([ordenId, refaccionId])
+  @@map("orden_refacciones")
+}
+
+// 9. Expedientes de Garantías
+model Garantia {
+  id                  String        @id @default(uuid())
+  numeroGarantia      String        @unique @map("numero_garantia") // GAR-YYYY-XXXX
+  ordenServicioId     String        @map("orden_servicio_id")
+  orden               OrdenServicio @relation(fields: [ordenServicioId], references: [id])
+  marca               String
+  clienteId           String        @map("cliente_id")
+  cliente             Cliente       @relation(fields: [clienteId], references: [id])
+  motocicletaId       String        @map("motocicleta_id")
+  motocicleta         Motocicleta   @relation(fields: [motocicletaId], references: [id])
+  fechaCompra         DateTime      @map("fecha_compra")
+  fechaReclamacion    DateTime      @default(now()) @map("fecha_reclamacion")
+  componenteAfectado  String        @map("componente_afectado")
+  descripcionProblema String        @map("descripcion_problema")
+  dictamenTecnico     String?       @map("dictamen_tecnico")
+  estado              String        @default("Capturada") // Capturada, En revisión, Enviada a fabricante, Aprobada, Rechazada, Cerrada
+  costoCubierto       Decimal       @default(0) @map("costo_cubierto") @db.Decimal(10, 2)
+  creadoEn            DateTime      @default(now()) @map("creado_en")
+  fotografias         Fotografia[]
+
+  @@map("garantias")
+}
+
+// 10. Kardex de Movimientos de Almacén
+model MovimientoInventario {
+  id          String      @id @default(uuid())
+  refaccionId String      @map("refaccion_id")
+  refaccion   Refaccion   @relation(fields: [refaccionId], references: [id], onDelete: Cascade)
+  tipo        String      // ENTRADA, SALIDA, AJUSTE, TRANSFERENCIA
+  cantidad    Int
+  motivo      String
+  fecha       DateTime    @default(now())
+  usuarioId   String      @map("usuario_id")
+  usuario     Usuario     @relation(fields: [usuarioId], references: [id])
+
+  @@map("movimientos_inventario")
+}
+
+// 11. Adjuntos Visuales y Fotografías Evidencias
+model Fotografia {
+  id              String         @id @default(uuid())
+  ordenServicioId String?        @map("orden_servicio_id")
+  orden           OrdenServicio? @relation(fields: [ordenServicioId], references: [id], onDelete: Cascade)
+  garantiasId     String?        @map("garantias_id")
+  garantias       Garantia?      @relation(fields: [garantiasId], references: [id], onDelete: Cascade)
+  urlImagen       String         @map("url_imagen")
+  tipo            String         // ANTES, DESPUES, EVIDENCIA
+  creadoEn        DateTime       @default(now()) @map("creado_en")
+
+  @@map("fotografias")
+}
+
+// 12. Bitácora de Auditoría del Sistema
+model Auditoria {
+  id            String   @id @default(uuid())
+  usuarioId     String   @map("usuario_id")
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id])
+  accion        String   // CREATE, UPDATE, DELETE, LOGIN
+  tablaAfectada String   @map("tabla_afectada")
+  registroId    String   @map("registro_id")
+  detalles      String
+  fecha         DateTime @default(now())
+
+  @@map("auditoria_logs")
+}
+
+// 13. Cotizaciones de Servicio
+model Cotizacion {
+  id                 String           @id @default(uuid())
+  folio              String           @unique // COT-YYYY-XXXX
+  fecha              String           // Fecha de creación
+  clienteId          String           @map("cliente_id")
+  cliente            Cliente          @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  vehiculo           String           // Marca & Modelo a cotizar
+  estado             String           @default("Pendiente") // Pendiente, Aprobada, Rechazada, Convertida
+  costoServicio      Decimal          @default(0) @map("costo_servicio") @db.Decimal(10, 2)
+  costoRefacciones   Decimal          @default(0) @map("costo_refacciones") @db.Decimal(10, 2)
+  costoTotal         Decimal          @default(0) @map("costo_total") @db.Decimal(10, 2)
+  ordenServicioFolio String?          @map("orden_servicio_folio")
+  creadoEn           DateTime         @default(now()) @map("creado_en")
+  cotizacionItems    CotizacionItem[]
+
+  @@map("cotizaciones")
+}
+
+// 14. Conceptos Detallados de Cotización
+model CotizacionItem {
+  id            String     @id @default(uuid())
+  cotizacionId  String     @map("cotizacion_id")
+  cotizacion    Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
+  descripcion   String
+  unidadMedida  String     @default("Pza") @map("unidad_medida")
+  costo         Decimal    @default(0) @db.Decimal(10, 2)
+  manoDeObra    Decimal    @default(0) @map("mano_de_obra") @db.Decimal(10, 2)
+  tiempoEntrega String     @default("Inmediata") @map("tiempo_entrega")
+
+  @@map("cotizacion_items")
+}
