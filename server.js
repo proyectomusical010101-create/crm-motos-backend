@@ -397,8 +397,57 @@ app.delete('/api/cotizaciones/:id', authenticateToken, checkRole(['ADMINISTRADOR
 // API REST: TÉCNICOS
 // ==========================================
 
+// Helper para sincronizar automáticamente usuarios de rol 'TECNICO' hacia el catálogo de técnicos
+const syncTechnicians = async () => {
+  try {
+    const tecnicoRol = await prisma.rol.findFirst({
+      where: { nombre: 'TECNICO' }
+    });
+    if (!tecnicoRol) return;
+
+    const techUsers = await prisma.usuario.findMany({
+      where: { rolId: tecnicoRol.id }
+    });
+
+    for (const user of techUsers) {
+      const exists = await prisma.tecnico.findUnique({
+        where: { id: user.id }
+      });
+      if (!exists) {
+        const existsByEmail = await prisma.tecnico.findFirst({
+          where: { correo: user.email }
+        });
+        if (!existsByEmail) {
+          await prisma.tecnico.create({
+            data: {
+              id: user.id,
+              nombre: user.nombre,
+              especialidad: 'General (Usuario CRM)',
+              telefono: 'N/A',
+              correo: user.email,
+              activo: user.activo
+            }
+          });
+        }
+      } else {
+        await prisma.tecnico.update({
+          where: { id: user.id },
+          data: {
+            nombre: user.nombre,
+            correo: user.email,
+            activo: user.activo
+          }
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error en syncTechnicians:', err);
+  }
+};
+
 app.get('/api/tecnicos', authenticateToken, async (req, res) => {
   try {
+    await syncTechnicians();
     const data = await prisma.tecnico.findMany({
       orderBy: { nombre: 'asc' }
     });
@@ -510,6 +559,9 @@ app.post('/api/usuarios', authenticateToken, checkRole(['ADMINISTRADOR']), async
     });
     const { passwordHash: _, ...safeUser } = newUser;
     await logAudit(req.user.id, 'CREATE', 'usuarios', newUser.id, `Usuario creado: ${newUser.email} (${newUser.rol.nombre})`);
+    
+    await syncTechnicians();
+
     res.status(201).json(safeUser);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -537,6 +589,9 @@ app.put('/api/usuarios/:id', authenticateToken, checkRole(['ADMINISTRADOR']), as
     });
     const { passwordHash: _, ...safeUser } = updated;
     await logAudit(req.user.id, 'UPDATE', 'usuarios', id, `Usuario actualizado: ${updated.email}`);
+    
+    await syncTechnicians();
+
     res.json(safeUser);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -553,6 +608,13 @@ app.delete('/api/usuarios/:id', authenticateToken, checkRole(['ADMINISTRADOR']),
       where: { id }
     });
     await logAudit(req.user.id, 'DELETE', 'usuarios', id, `Usuario eliminado: ${deleted.email}`);
+    
+    // Desactivar el técnico correspondiente para no romper llaves foráneas en órdenes de servicio
+    await prisma.tecnico.updateMany({
+      where: { id },
+      data: { activo: false }
+    });
+
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
