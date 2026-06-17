@@ -462,6 +462,104 @@ app.get('/api/auditorias', authenticateToken, checkRole(['ADMINISTRADOR', 'GEREN
 });
 
 // ==========================================
+// API REST: ROLES Y GESTIÓN DE USUARIOS
+// ==========================================
+
+app.get('/api/roles', authenticateToken, async (req, res) => {
+  try {
+    const roles = await prisma.rol.findMany({
+      orderBy: { nombre: 'asc' }
+    });
+    res.json(roles);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/usuarios', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+  try {
+    const users = await prisma.usuario.findMany({
+      include: { rol: true },
+      orderBy: { nombre: 'asc' }
+    });
+    // Omitir passwordHash
+    const safeUsers = users.map(u => {
+      const { passwordHash, ...rest } = u;
+      return rest;
+    });
+    res.json(safeUsers);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/usuarios', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+  const { nombre, email, password, rolId, sucursal, activo } = req.body;
+  try {
+    const passwordHash = await bcrypt.hash(password || '123456', 10);
+    const newUser = await prisma.usuario.create({
+      data: {
+        nombre,
+        email,
+        passwordHash,
+        rolId,
+        sucursal: sucursal || 'Sucursal Norte (Principal)',
+        activo: activo !== undefined ? activo : true
+      },
+      include: { rol: true }
+    });
+    const { passwordHash: _, ...safeUser } = newUser;
+    await logAudit(req.user.id, 'CREATE', 'usuarios', newUser.id, `Usuario creado: ${newUser.email} (${newUser.rol.nombre})`);
+    res.status(201).json(safeUser);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.put('/api/usuarios/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+  const { id } = req.params;
+  const { nombre, email, password, rolId, sucursal, activo } = req.body;
+  try {
+    const updateData = {
+      nombre,
+      email,
+      rolId,
+      sucursal,
+      activo: activo !== undefined ? activo : true
+    };
+    if (password) {
+      updateData.passwordHash = await bcrypt.hash(password, 10);
+    }
+    const updated = await prisma.usuario.update({
+      where: { id },
+      data: updateData,
+      include: { rol: true }
+    });
+    const { passwordHash: _, ...safeUser } = updated;
+    await logAudit(req.user.id, 'UPDATE', 'usuarios', id, `Usuario actualizado: ${updated.email}`);
+    res.json(safeUser);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.delete('/api/usuarios/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (id === req.user.id) {
+      return res.status(400).json({ error: 'No puedes eliminar tu propio usuario.' });
+    }
+    const deleted = await prisma.usuario.delete({
+      where: { id }
+    });
+    await logAudit(req.user.id, 'DELETE', 'usuarios', id, `Usuario eliminado: ${deleted.email}`);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// ==========================================
 // INICIO DEL SERVIDOR DE PRODUCCIÓN
 // ==========================================
 
