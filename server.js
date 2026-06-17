@@ -206,6 +206,9 @@ app.post('/api/clientes/importar-masivo', authenticateToken, checkRole(['ADMINIS
           skippedMotos++;
         }
       }
+    }, {
+      maxWait: 60000, // Tiempo de espera para la conexión de DB
+      timeout: 120000 // Aumentado a 120 segundos para importar lotes grandes de más de 500 filas
     });
 
     await logAudit(req.user.id, 'CREATE', 'clientes', 'masivo', `Importación masiva: ${clientesCreados} clientes y ${motosCreadas} motocicletas cargadas (${skippedMotos} motos duplicadas omitidas).`);
