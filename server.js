@@ -789,6 +789,19 @@ app.post('/api/activaciones', authenticateToken, checkRole(['ADMINISTRADOR', 'RE
   }
 });
 
+app.delete('/api/activaciones/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+  const { id } = req.params;
+  try {
+    const deleted = await prisma.activacion.delete({
+      where: { id }
+    });
+    await logAudit(req.user.id, 'DELETE', 'activaciones', id, `Eliminación de activación ID: ${id} (${deleted.marca} ${deleted.modelo})`);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 
 // ==========================================
 // API REST: AUDITORÍA
