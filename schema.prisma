@@ -256,3 +256,19 @@ model CotizacionItem {
 
   @@map("cotizacion_items")
 }
+
+// 15. Activaciones de Unidad (Garantías de Unidad Nueva)
+model Activacion {
+  id            String   @id @default(uuid())
+  marca         String
+  modelo        String
+  tienda        String
+  vin           String   @unique
+  clienteNombre String   @map("cliente_nombre")
+  placas        String?
+  tecnicoNombre String   @map("tecnico_nombre")
+  fecha         DateTime @default(now()) @map("fecha")
+  estado        String   @default("Activado")
+
+  @@map("activaciones")
+}

@@ -740,6 +740,55 @@ app.delete('/api/tecnicos/:id', authenticateToken, checkRole(['ADMINISTRADOR']),
   }
 });
 
+// ==========================================
+// API REST: ACTIVACIONES DE UNIDAD
+// ==========================================
+
+app.get('/api/activaciones', authenticateToken, async (req, res) => {
+  try {
+    const data = await prisma.activacion.findMany({
+      orderBy: { fecha: 'desc' }
+    });
+    // Formatear la fecha como string YYYY-MM-DD
+    const formatted = data.map(act => ({
+      ...act,
+      fecha: act.fecha.toISOString().split('T')[0]
+    }));
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/activaciones', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION', 'TECNICO']), async (req, res) => {
+  const { vin } = req.body;
+  try {
+    // Verificar si ya está activado ese VIN
+    const existing = await prisma.activacion.findUnique({
+      where: { vin: vin.trim().toUpperCase() }
+    });
+    if (existing) {
+      return res.status(400).json({ error: `La unidad con VIN ${vin} ya ha sido activada anteriormente.` });
+    }
+
+    const count = await prisma.activacion.count();
+    const formattedId = `ACT-${String(count + 1).padStart(2, '0')}`;
+
+    const activacion = await prisma.activacion.create({
+      data: {
+        ...req.body,
+        id: formattedId,
+        vin: vin.trim().toUpperCase()
+      }
+    });
+
+    await logAudit(req.user.id, 'CREATE', 'activaciones', activacion.id, `Activación de unidad: Marca ${activacion.marca}, Modelo ${activacion.modelo}, Tienda ${activacion.tienda}`);
+    res.status(201).json(activacion);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 
 // ==========================================
 // API REST: AUDITORÍA
@@ -852,9 +901,23 @@ app.delete('/api/usuarios/:id', authenticateToken, checkRole(['ADMINISTRADOR']),
     if (id === req.user.id) {
       return res.status(400).json({ error: 'No puedes eliminar tu propio usuario.' });
     }
-    const deleted = await prisma.usuario.delete({
-      where: { id }
+    const deleted = await prisma.$transaction(async (tx) => {
+      // 1. Eliminar los logs de auditoría asociados al usuario
+      await tx.auditoria.deleteMany({
+        where: { usuarioId: id }
+      });
+
+      // 2. Eliminar los movimientos de inventario asociados al usuario
+      await tx.movimientoInventario.deleteMany({
+        where: { usuarioId: id }
+      });
+
+      // 3. Eliminar el usuario
+      return await tx.usuario.delete({
+        where: { id }
+      });
     });
+
     await logAudit(req.user.id, 'DELETE', 'usuarios', id, `Usuario eliminado: ${deleted.email}`);
     
     // Desactivar el técnico correspondiente para no romper llaves foráneas en órdenes de servicio
