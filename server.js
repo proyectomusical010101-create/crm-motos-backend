@@ -318,7 +318,7 @@ const filterOrdenData = (body) => {
   return data;
 };
 
-app.post('/api/ordenes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION']), async (req, res) => {
+app.post('/api/ordenes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION', 'TECNICO']), async (req, res) => {
   const { refacciones, refaccionesUtilizadas, registrarNuevo, nuevoCliente, registrarNuevaMotoParaClienteExistente, nuevaMoto, ...rawBody } = req.body;
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -456,6 +456,19 @@ app.put('/api/ordenes/:id', authenticateToken, async (req, res) => {
 
     await logAudit(req.user.id, 'UPDATE', 'ordenes_servicio', id, `Modificación de orden: ${result.folio}`);
     res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.delete('/api/ordenes/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+  const { id } = req.params;
+  try {
+    const deleted = await prisma.ordenServicio.delete({
+      where: { id }
+    });
+    await logAudit(req.user.id, 'DELETE', 'ordenes_servicio', id, `Eliminación de orden de servicio folio: ${deleted.folio}`);
+    res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
