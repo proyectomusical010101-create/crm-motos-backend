@@ -6,6 +6,7 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 const app = express();
@@ -143,73 +144,107 @@ app.post('/api/clientes/importar-masivo', authenticateToken, checkRole(['ADMINIS
     let motosCreadas = 0;
     let skippedMotos = 0;
 
-    await prisma.$transaction(async (tx) => {
-      for (const row of records) {
-        const { nombreCompleto, email, telefono, moto } = row;
-        if (!nombreCompleto || !moto || !moto.vin) continue;
+    // 1. Obtener todos los clientes existentes en una sola consulta
+    const existingClients = await prisma.cliente.findMany({
+      select: { id: true, nombreCompleto: true, email: true }
+    });
 
-        // 1. Resolver o crear cliente
-        let cliente = null;
-        if (email) {
-          cliente = await tx.cliente.findFirst({
-            where: {
-              OR: [
-                { email: { equals: email, mode: 'insensitive' } },
-                { nombreCompleto: { equals: nombreCompleto, mode: 'insensitive' } }
-              ]
-            }
-          });
-        } else {
-          cliente = await tx.cliente.findFirst({
-            where: { nombreCompleto: { equals: nombreCompleto, mode: 'insensitive' } }
-          });
-        }
+    // 2. Obtener todos los VINs existentes en una sola consulta
+    const existingMotos = await prisma.motocicleta.findMany({
+      select: { vin: true }
+    });
+    const existingVins = new Set(existingMotos.map(m => m.vin.toLowerCase().trim()));
 
-        if (!cliente) {
-          cliente = await tx.cliente.create({
-            data: {
-              nombreCompleto,
-              email: email || null,
-              telefono: telefono || 'N/A'
-            }
+    // Mapas en memoria para buscar duplicados rápidamente
+    const clientMap = new Map();
+    existingClients.forEach(c => {
+      clientMap.set(c.nombreCompleto.toLowerCase().trim(), c.id);
+      if (c.email) {
+        clientMap.set(c.email.toLowerCase().trim(), c.id);
+      }
+    });
+
+    const newClients = [];
+    const newMotos = [];
+
+    // Colección de clientes recién creados en este lote (para asociar a motos del mismo lote)
+    const tempClientMap = new Map();
+
+    for (const row of records) {
+      const { nombreCompleto, email, telefono, moto } = row;
+      if (!nombreCompleto || !moto || !moto.vin) continue;
+
+      const normName = nombreCompleto.toLowerCase().trim();
+      const normEmail = email ? email.toLowerCase().trim() : null;
+      const normVin = moto.vin.toLowerCase().trim();
+
+      // Resolver Cliente
+      let clienteId = clientMap.get(normName) || (normEmail ? clientMap.get(normEmail) : null);
+
+      if (!clienteId) {
+        // Verificar si ya lo creamos en este mismo lote
+        clienteId = tempClientMap.get(normName) || (normEmail ? tempClientMap.get(normEmail) : null);
+        
+        if (!clienteId) {
+          // Generar nuevo UUID para el cliente
+          clienteId = crypto.randomUUID();
+          
+          newClients.push({
+            id: clienteId,
+            nombreCompleto: nombreCompleto.trim(),
+            email: email ? email.trim() : null,
+            telefono: telefono || 'N/A'
           });
+          
+          tempClientMap.set(normName, clienteId);
+          if (normEmail) {
+            tempClientMap.set(normEmail, clienteId);
+          }
           clientesCreados++;
         }
-
-        // 2. Resolver o crear motocicleta
-        const motoExists = await tx.motocicleta.findUnique({
-          where: { vin: moto.vin }
-        });
-
-        if (!motoExists) {
-          const fechaCompra = new Date();
-          const fechaGarantiaLimite = new Date();
-          fechaGarantiaLimite.setFullYear(fechaGarantiaLimite.getFullYear() + 2); // 2 años de garantía por defecto
-
-          await tx.motocicleta.create({
-            data: {
-              clienteId: cliente.id,
-              marca: moto.marca || 'VENTO',
-              modelo: moto.modelo,
-              vin: moto.vin,
-              anio: moto.anio || 2026,
-              color: 'N/A',
-              numeroMotor: 'N/A',
-              kilometraje: 0,
-              fechaCompra,
-              fechaGarantiaLimite,
-              estadoGarantia: 'ACTIVA'
-            }
-          });
-          motosCreadas++;
-        } else {
-          skippedMotos++;
-        }
       }
-    }, {
-      maxWait: 60000, // Tiempo de espera para la conexión de DB
-      timeout: 120000 // Aumentado a 120 segundos para importar lotes grandes de más de 500 filas
-    });
+
+      // Resolver Motocicleta
+      if (existingVins.has(normVin)) {
+        skippedMotos++;
+        continue;
+      }
+
+      // Verificar que no hayamos agregado este mismo VIN en este lote
+      const alreadyAddedVin = newMotos.some(m => m.vin.toLowerCase().trim() === normVin);
+      if (alreadyAddedVin) {
+        skippedMotos++;
+        continue;
+      }
+
+      const fechaCompra = new Date();
+      const fechaGarantiaLimite = new Date();
+      fechaGarantiaLimite.setFullYear(fechaGarantiaLimite.getFullYear() + 2);
+
+      newMotos.push({
+        id: crypto.randomUUID(), // Generamos ID para la moto también
+        clienteId,
+        marca: moto.marca || 'VENTO',
+        modelo: moto.modelo,
+        vin: moto.vin,
+        anio: moto.anio || 2026,
+        color: 'N/A',
+        numeroMotor: 'N/A',
+        kilometraje: 0,
+        fechaCompra,
+        fechaGarantiaLimite,
+        estadoGarantia: 'ACTIVA'
+      });
+      motosCreadas++;
+    }
+
+    // 3. Ejecutar inserción en lote (Bulk Insert) en una sola transacción ultrarrápida
+    if (newClients.length > 0 || newMotos.length > 0) {
+      await prisma.$transaction([
+        ...(newClients.length > 0 ? [prisma.cliente.createMany({ data: newClients })] : []),
+        ...(newMotos.length > 0 ? [prisma.motocicleta.createMany({ data: newMotos })] : [])
+      ]);
+    }
 
     await logAudit(req.user.id, 'CREATE', 'clientes', 'masivo', `Importación masiva: ${clientesCreados} clientes y ${motosCreadas} motocicletas cargadas (${skippedMotos} motos duplicadas omitidas).`);
     
