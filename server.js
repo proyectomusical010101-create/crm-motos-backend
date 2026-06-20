@@ -578,7 +578,7 @@ app.get('/api/cotizaciones', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/cotizaciones', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA']), async (req, res) => {
+app.post('/api/cotizaciones', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA', 'TECNICO']), async (req, res) => {
   const { cotizacionItems, registrarNuevo, nuevoCliente, ...cotData } = req.body;
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -592,12 +592,14 @@ app.post('/api/cotizaciones', authenticateToken, checkRole(['ADMINISTRADOR', 'GE
       const count = await tx.cotizacion.count();
       const currentYear = new Date().getFullYear();
       const folio = `COT-${currentYear}-${String(count + 1).padStart(4, '0')}`;
+      const fecha = cotData.fecha || new Date().toISOString().split('T')[0];
 
       const cotizacion = await tx.cotizacion.create({
         data: {
           ...cotData,
           clienteId,
           folio,
+          fecha,
           cotizacionItems: {
             create: cotizacionItems || []
           }
@@ -615,7 +617,7 @@ app.post('/api/cotizaciones', authenticateToken, checkRole(['ADMINISTRADOR', 'GE
   }
 });
 
-app.put('/api/cotizaciones/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA']), async (req, res) => {
+app.put('/api/cotizaciones/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA', 'TECNICO']), async (req, res) => {
   const { id } = req.params;
   const { cotizacionItems, ...cotData } = req.body;
   try {
