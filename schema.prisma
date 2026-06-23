@@ -126,6 +126,8 @@ model OrdenServicio {
   estado             String           @default("Recibido")
   costoTotal         Decimal          @default(0) @map("costo_total") @db.Decimal(10, 2)
   creadoEn           DateTime         @default(now()) @map("creado_en")
+  cotizacionVehiculo String?          @map("cotizacion_vehiculo")
+  cotizacionItems    String?          @map("cotizacion_items")
   fotografias        Fotografia[]
   garantias          Garantia[]
   refacciones        OrdenRefaccion[]

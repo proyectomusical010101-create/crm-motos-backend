@@ -344,7 +344,11 @@ app.get('/api/ordenes', authenticateToken, async (req, res) => {
     const data = await prisma.ordenServicio.findMany({
       include: { cliente: true, motocicleta: true, tecnico: true, refacciones: true }
     });
-    res.json(data);
+    const parsed = data.map(o => ({
+      ...o,
+      cotizacionItems: o.cotizacionItems ? JSON.parse(o.cotizacionItems) : []
+    }));
+    res.json(parsed);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -367,6 +371,12 @@ const filterOrdenData = (body) => {
   if (body.fechaEntrega !== undefined) data.fechaEntrega = body.fechaEntrega ? new Date(body.fechaEntrega) : null;
   if (body.estado !== undefined) data.estado = body.estado;
   if (body.costoTotal !== undefined) data.costoTotal = parseFloat(body.costoTotal) || 0;
+  if (body.cotizacionVehiculo !== undefined) data.cotizacionVehiculo = body.cotizacionVehiculo;
+  if (body.cotizacionItems !== undefined) {
+    data.cotizacionItems = typeof body.cotizacionItems === 'string'
+      ? body.cotizacionItems
+      : JSON.stringify(body.cotizacionItems);
+  }
 
   return data;
 };
@@ -487,7 +497,11 @@ app.post('/api/ordenes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCI
     });
 
     await logAudit(req.user.id, 'CREATE', 'ordenes_servicio', result.id, `Apertura de orden: ${result.folio}`);
-    res.status(201).json(result);
+    const responseData = {
+      ...result,
+      cotizacionItems: result.cotizacionItems ? JSON.parse(result.cotizacionItems) : []
+    };
+    res.status(201).json(responseData);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -531,7 +545,11 @@ app.put('/api/ordenes/:id', authenticateToken, async (req, res) => {
     });
 
     await logAudit(req.user.id, 'UPDATE', 'ordenes_servicio', id, `Modificación de orden: ${result.folio}`);
-    res.json(result);
+    const responseData = {
+      ...result,
+      cotizacionItems: result.cotizacionItems ? JSON.parse(result.cotizacionItems) : []
+    };
+    res.json(responseData);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
