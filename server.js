@@ -851,10 +851,28 @@ app.put('/api/tecnicos/:id', authenticateToken, checkRole(['ADMINISTRADOR']), as
 app.delete('/api/tecnicos/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
   const { id } = req.params;
   try {
+    // 1. Intentar eliminación física de la base de datos
     await prisma.tecnico.delete({ where: { id } });
-    await logAudit(req.user.id, 'DELETE', 'tecnicos', id, `Eliminación de técnico ID: ${id}`);
-    res.json({ success: true });
+    await logAudit(req.user.id, 'DELETE', 'tecnicos', id, `Eliminación física de técnico ID: ${id}`);
+    res.json({ success: true, message: 'Técnico eliminado de la base de datos.' });
   } catch (err) {
+    // 2. Si falla por llave foránea debido a órdenes asignadas (código P2003 de Prisma o texto relacionado)
+    if (err.code === 'P2003' || err.message.includes('foreign key constraint') || err.message.includes('violates RESTRICT')) {
+      try {
+        const updated = await prisma.tecnico.update({
+          where: { id },
+          data: { activo: false }
+        });
+        await logAudit(req.user.id, 'DISABLE', 'tecnicos', id, `Baja lógica (inactivo) de técnico ID: ${id} debido a dependencias.`);
+        return res.json({ 
+          success: true, 
+          message: 'El técnico tiene órdenes asociadas. Se ha cambiado su estado a INACTIVO para preservar el historial.',
+          softDeleted: true
+        });
+      } catch (subErr) {
+        return res.status(400).json({ error: subErr.message });
+      }
+    }
     res.status(400).json({ error: err.message });
   }
 });
