@@ -818,7 +818,11 @@ app.get('/api/tecnicos', authenticateToken, async (req, res) => {
 
 app.post('/api/tecnicos', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
   try {
-    const tech = await prisma.tecnico.create({ data: req.body });
+    const data = { ...req.body };
+    if (data.fechaIngreso) {
+      data.fechaIngreso = new Date(data.fechaIngreso);
+    }
+    const tech = await prisma.tecnico.create({ data });
     await logAudit(req.user.id, 'CREATE', 'tecnicos', tech.id, `Registro técnico: ${tech.nombre}`);
     res.status(201).json(tech);
   } catch (err) {
@@ -829,9 +833,13 @@ app.post('/api/tecnicos', authenticateToken, checkRole(['ADMINISTRADOR']), async
 app.put('/api/tecnicos/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
   const { id } = req.params;
   try {
+    const data = { ...req.body };
+    if (data.fechaIngreso) {
+      data.fechaIngreso = new Date(data.fechaIngreso);
+    }
     const updated = await prisma.tecnico.update({
       where: { id },
-      data: req.body
+      data
     });
     await logAudit(req.user.id, 'UPDATE', 'tecnicos', id, `Modificación técnico: ${updated.nombre}`);
     res.json(updated);
