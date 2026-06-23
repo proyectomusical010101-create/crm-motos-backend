@@ -274,9 +274,46 @@ app.get('/api/motocicletas', authenticateToken, async (req, res) => {
 
 app.post('/api/motocicletas', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION']), async (req, res) => {
   try {
-    const moto = await prisma.motocicleta.create({ data: req.body });
+    const data = { ...req.body };
+    if (!data.vin?.trim()) {
+      data.vin = 'S/N-' + Math.random().toString(36).substring(2, 11).toUpperCase();
+    } else {
+      data.vin = data.vin.trim().toUpperCase();
+    }
+    const moto = await prisma.motocicleta.create({ data });
     await logAudit(req.user.id, 'CREATE', 'motocicletas', moto.id, `Ingreso de moto: ${moto.marca} ${moto.modelo} Placas: ${moto.placas}`);
     res.status(201).json(moto);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.put('/api/motocicletas/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION']), async (req, res) => {
+  const { id } = req.params;
+  try {
+    const data = { ...req.body };
+    if (!data.vin?.trim()) {
+      data.vin = 'S/N-' + Math.random().toString(36).substring(2, 11).toUpperCase();
+    } else {
+      data.vin = data.vin.trim().toUpperCase();
+    }
+    const updated = await prisma.motocicleta.update({
+      where: { id },
+      data
+    });
+    await logAudit(req.user.id, 'UPDATE', 'motocicletas', id, `Modificación moto: ${updated.marca} ${updated.modelo} Placas: ${updated.placas}`);
+    res.json(updated);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.delete('/api/motocicletas/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.motocicleta.delete({ where: { id } });
+    await logAudit(req.user.id, 'DELETE', 'motocicletas', id, `Eliminación de moto ID: ${id}`);
+    res.json({ message: 'Motocicleta eliminada correctamente.' });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -341,12 +378,15 @@ app.post('/api/ordenes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCI
 
       // 2. Registrar Motocicleta Nueva al vuelo si aplica
       if ((registrarNuevo || registrarNuevaMotoParaClienteExistente) && nuevaMoto) {
-        // Asegurar que no esté duplicado el VIN
-        const existingMoto = await tx.motocicleta.findUnique({
-          where: { vin: nuevaMoto.vin.trim().toUpperCase() }
-        });
-        if (existingMoto) {
-          throw new Error(`La motocicleta con número de serie (VIN) ${nuevaMoto.vin} ya se encuentra registrada en el sistema.`);
+        const targetVin = nuevaMoto.vin?.trim() ? nuevaMoto.vin.trim().toUpperCase() : ('S/N-' + Math.random().toString(36).substring(2, 11).toUpperCase());
+        
+        if (nuevaMoto.vin?.trim()) {
+          const existingMoto = await tx.motocicleta.findUnique({
+            where: { vin: targetVin }
+          });
+          if (existingMoto) {
+            throw new Error(`La motocicleta con número de serie (VIN) ${nuevaMoto.vin} ya se encuentra registrada en el sistema.`);
+          }
         }
 
         const nm = await tx.motocicleta.create({
@@ -355,7 +395,7 @@ app.post('/api/ordenes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCI
             marca: nuevaMoto.marca || 'VENTO',
             modelo: nuevaMoto.modelo,
             anio: parseInt(nuevaMoto.anio, 10) || new Date().getFullYear(),
-            vin: nuevaMoto.vin.trim().toUpperCase(),
+            vin: targetVin,
             numeroMotor: nuevaMoto.numeroMotor || 'N/A',
             placas: nuevaMoto.placas || '',
             color: nuevaMoto.color || 'N/A',
