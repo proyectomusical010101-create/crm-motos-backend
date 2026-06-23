@@ -354,13 +354,14 @@ app.post('/api/ordenes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCI
             clienteId: clienteId,
             marca: nuevaMoto.marca || 'VENTO',
             modelo: nuevaMoto.modelo,
+            anio: parseInt(nuevaMoto.anio, 10) || new Date().getFullYear(),
             vin: nuevaMoto.vin.trim().toUpperCase(),
-            numeroMotor: nuevaMoto.numeroMotor || '',
+            numeroMotor: nuevaMoto.numeroMotor || 'N/A',
             placas: nuevaMoto.placas || '',
             color: nuevaMoto.color || 'N/A',
             kilometraje: parseInt(nuevaMoto.kilometraje, 10) || 0,
             fechaCompra: nuevaMoto.fechaCompra ? new Date(nuevaMoto.fechaCompra) : new Date(),
-            limiteGarantia: new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000) // 2 años por defecto
+            fechaGarantiaLimite: new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000)
           }
         });
         motocicletaId = nm.id;
