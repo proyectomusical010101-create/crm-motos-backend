@@ -280,6 +280,14 @@ app.post('/api/motocicletas', authenticateToken, checkRole(['ADMINISTRADOR', 'RE
     } else {
       data.vin = data.vin.trim().toUpperCase();
     }
+    
+    const fechaCompraObj = data.fechaCompra ? new Date(data.fechaCompra) : new Date();
+    data.fechaCompra = fechaCompraObj;
+    
+    const limiteGarantia = new Date(fechaCompraObj);
+    limiteGarantia.setFullYear(limiteGarantia.getFullYear() + 2);
+    data.fechaGarantiaLimite = limiteGarantia;
+
     const moto = await prisma.motocicleta.create({ data });
     await logAudit(req.user.id, 'CREATE', 'motocicletas', moto.id, `Ingreso de moto: ${moto.marca} ${moto.modelo} Placas: ${moto.placas}`);
     res.status(201).json(moto);
@@ -297,6 +305,14 @@ app.put('/api/motocicletas/:id', authenticateToken, checkRole(['ADMINISTRADOR', 
     } else {
       data.vin = data.vin.trim().toUpperCase();
     }
+    
+    const fechaCompraObj = data.fechaCompra ? new Date(data.fechaCompra) : new Date();
+    data.fechaCompra = fechaCompraObj;
+    
+    const limiteGarantia = new Date(fechaCompraObj);
+    limiteGarantia.setFullYear(limiteGarantia.getFullYear() + 2);
+    data.fechaGarantiaLimite = limiteGarantia;
+
     const updated = await prisma.motocicleta.update({
       where: { id },
       data
