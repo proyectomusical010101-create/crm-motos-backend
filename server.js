@@ -366,10 +366,29 @@ app.post('/api/ordenes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCI
         motocicletaId = nm.id;
       }
 
-      // 3. Generar Folio consecutivo automático
-      const totalCount = await tx.ordenServicio.count();
+      // 3. Generar Folio consecutivo automático (robusto ante eliminaciones)
       const currentYear = new Date().getFullYear();
-      const folio = `OS-${currentYear}-${String(totalCount + 1).padStart(4, '0')}`;
+      const existingOrders = await tx.ordenServicio.findMany({
+        where: {
+          folio: {
+            startsWith: `OS-${currentYear}-`
+          }
+        },
+        select: {
+          folio: true
+        }
+      });
+      let maxNum = 0;
+      existingOrders.forEach(o => {
+        const parts = o.folio.split('-');
+        if (parts.length === 3) {
+          const num = parseInt(parts[2], 10);
+          if (!isNaN(num) && num > maxNum) {
+            maxNum = num;
+          }
+        }
+      });
+      const folio = `OS-${currentYear}-${String(maxNum + 1).padStart(4, '0')}`;
 
       // 4. Filtrar y preparar datos de la orden
       const orderData = filterOrdenData({
@@ -589,9 +608,29 @@ app.post('/api/cotizaciones', authenticateToken, checkRole(['ADMINISTRADOR', 'GE
         clienteId = nc.id;
       }
 
-      const count = await tx.cotizacion.count();
+      // Generar Folio consecutivo automático (robusto ante eliminaciones)
       const currentYear = new Date().getFullYear();
-      const folio = `COT-${currentYear}-${String(count + 1).padStart(4, '0')}`;
+      const existingCots = await tx.cotizacion.findMany({
+        where: {
+          folio: {
+            startsWith: `COT-${currentYear}-`
+          }
+        },
+        select: {
+          folio: true
+        }
+      });
+      let maxNum = 0;
+      existingCots.forEach(c => {
+        const parts = c.folio.split('-');
+        if (parts.length === 3) {
+          const num = parseInt(parts[2], 10);
+          if (!isNaN(num) && num > maxNum) {
+            maxNum = num;
+          }
+        }
+      });
+      const folio = `COT-${currentYear}-${String(maxNum + 1).padStart(4, '0')}`;
       const fecha = cotData.fecha || new Date().toISOString().split('T')[0];
 
       const cotizacion = await tx.cotizacion.create({
