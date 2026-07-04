@@ -7,15 +7,6 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
-import { execSync } from 'child_process';
-
-// Regenerar Prisma Client de forma dinámica al iniciar para evitar problemas de caché
-try {
-  console.log('🔄 Regenerando Prisma Client de forma dinámica al iniciar...');
-  execSync('npx prisma generate', { stdio: 'inherit' });
-} catch (e) {
-  console.error('❌ Falló la regeneración de Prisma Client:', e);
-}
 
 const prisma = new PrismaClient();
 const app = express();
