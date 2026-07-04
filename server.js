@@ -897,6 +897,102 @@ app.delete('/api/tecnicos/:id', authenticateToken, checkRole(['ADMINISTRADOR']),
 });
 
 // ==========================================
+// API REST: REPARACIONES SIMPLES
+// ==========================================
+
+app.get('/api/reparaciones-simples', authenticateToken, async (req, res) => {
+  try {
+    const isTech = req.user.rol === 'TECNICO';
+    const where = isTech ? { tecnicoId: req.user.id } : {};
+    
+    const data = await prisma.reparacionSimple.findMany({
+      where,
+      orderBy: { fecha: 'desc' },
+      include: {
+        tecnico: {
+          select: { nombre: true, correo: true }
+        },
+        creador: {
+          select: { nombre: true, email: true }
+        }
+      }
+    });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/reparaciones-simples', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+  const { descripcion, monto, tecnicoId, fecha } = req.body;
+  if (!descripcion || monto === undefined || !tecnicoId) {
+    return res.status(400).json({ error: 'Descripción, monto y técnico son obligatorios.' });
+  }
+
+  try {
+    const rep = await prisma.reparacionSimple.create({
+      data: {
+        descripcion,
+        monto: parseFloat(monto) || 0,
+        tecnicoId,
+        creadoPorId: req.user.id,
+        fecha: fecha ? new Date(fecha) : new Date()
+      },
+      include: {
+        tecnico: { select: { nombre: true } },
+        creador: { select: { nombre: true } }
+      }
+    });
+
+    await logAudit(req.user.id, 'CREATE', 'reparaciones_simples', rep.id, `Asignación de reparación simple: ${descripcion} al técnico ID: ${tecnicoId}`);
+    res.status(201).json(rep);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.put('/api/reparaciones-simples/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+  const { id } = req.params;
+  const { descripcion, monto, tecnicoId, fecha } = req.body;
+
+  try {
+    const updated = await prisma.reparacionSimple.update({
+      where: { id },
+      data: {
+        ...(descripcion !== undefined && { descripcion }),
+        ...(monto !== undefined && { monto: parseFloat(monto) || 0 }),
+        ...(tecnicoId !== undefined && { tecnicoId }),
+        ...(fecha !== undefined && { fecha: new Date(fecha) })
+      },
+      include: {
+        tecnico: { select: { nombre: true } },
+        creador: { select: { nombre: true } }
+      }
+    });
+
+    await logAudit(req.user.id, 'UPDATE', 'reparaciones_simples', id, `Modificación de reparación simple ID: ${id}`);
+    res.json(updated);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.delete('/api/reparaciones-simples/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await prisma.reparacionSimple.delete({
+      where: { id }
+    });
+
+    await logAudit(req.user.id, 'DELETE', 'reparaciones_simples', id, `Eliminación de reparación simple ID: ${id}`);
+    res.json({ message: 'Reparación simple eliminada correctamente.' });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// ==========================================
 // API REST: ACTIVACIONES DE UNIDAD
 // ==========================================
 
