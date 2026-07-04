@@ -124,6 +124,7 @@ model OrdenServicio {
   fechaCompromiso    DateTime         @map("fecha_compromiso")
   fechaEntrega       DateTime?        @map("fecha_entrega")
   estado             String           @default("Recibido")
+  tipoAceite         String?          @default("Mineral") @map("tipo_aceite")
   costoTotal         Decimal          @default(0) @map("costo_total") @db.Decimal(10, 2)
   creadoEn           DateTime         @default(now()) @map("creado_en")
   cotizacionVehiculo String?          @map("cotizacion_vehiculo")

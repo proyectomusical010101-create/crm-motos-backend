@@ -370,6 +370,7 @@ const filterOrdenData = (body) => {
   if (body.fechaCompromiso !== undefined) data.fechaCompromiso = new Date(body.fechaCompromiso);
   if (body.fechaEntrega !== undefined) data.fechaEntrega = body.fechaEntrega ? new Date(body.fechaEntrega) : null;
   if (body.estado !== undefined) data.estado = body.estado;
+  if (body.tipoAceite !== undefined) data.tipoAceite = body.tipoAceite;
   if (body.costoTotal !== undefined) data.costoTotal = parseFloat(body.costoTotal) || 0;
   if (body.cotizacionVehiculo !== undefined) data.cotizacionVehiculo = body.cotizacionVehiculo;
   if (body.cotizacionItems !== undefined) {
