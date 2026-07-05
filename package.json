@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "build": "prisma generate",
-    "postinstall": "prisma generate"
+    "build": "prisma generate --schema=schema.prisma",
+    "postinstall": "prisma generate --schema=schema.prisma"
   },
   "prisma": {
     "seed": "node seed.js"
