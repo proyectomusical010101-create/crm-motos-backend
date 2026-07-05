@@ -27,6 +27,7 @@ model Usuario {
   creadoEn     DateTime               @default(now()) @map("creado_en")
   auditorias   Auditoria[]
   movimientos  MovimientoInventario[]
+  reparaciones ReparacionSimple[]
   rol          Rol                    @relation(fields: [rolId], references: [id])
 
   @@map("usuarios")
@@ -85,6 +86,7 @@ model Tecnico {
   fechaIngreso    DateTime        @default(now()) @map("fecha_ingreso")
   activo          Boolean         @default(true)
   ordenesServicio OrdenServicio[]
+  reparaciones    ReparacionSimple[]
 
   @@map("tecnicos")
 }
@@ -259,3 +261,19 @@ model Activacion {
 
   @@map("activaciones")
 }
+
+model ReparacionSimple {
+  id           String   @id @default(uuid())
+  descripcion  String
+  monto        Decimal  @db.Decimal(10, 2)
+  tecnicoId    String   @map("tecnico_id")
+  creadoPorId  String   @map("creado_por_id")
+  fecha        DateTime @default(now())
+  creadoEn     DateTime @default(now()) @map("creado_en")
+
+  tecnico      Tecnico  @relation(fields: [tecnicoId], references: [id], onDelete: Cascade)
+  creador      Usuario  @relation(fields: [creadoPorId], references: [id], onDelete: Cascade)
+
+  @@map("reparaciones_simples")
+}
+
