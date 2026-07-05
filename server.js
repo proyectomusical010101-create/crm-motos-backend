@@ -5,19 +5,9 @@ import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
-import { execSync } from 'child_process';
 
-// 1. Regenerar Prisma Client en el disco de forma síncrona en caliente
-try {
-  console.log('🔄 Regenerando Prisma Client de forma dinámica en caliente...');
-  execSync('npx prisma generate', { stdio: 'inherit' });
-} catch (e) {
-  console.error('❌ Falló la regeneración de Prisma Client:', e);
-}
-
-// 2. Importar dinámicamente el cliente de Prisma después de que se ha regenerado en el disco
-const { PrismaClient } = await import('@prisma/client');
 const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 5000;
