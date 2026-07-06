@@ -43,7 +43,7 @@ model Cliente {
   ciudad          String?
   estado          String?
   codigoPostal    String?         @map("codigo_postal")
-  rfc             String?         @unique
+  rfc             String?
   fechaRegistro   DateTime        @default(now()) @map("fecha_registro")
   observaciones   String?
   cotizaciones    Cotizacion[]

@@ -100,7 +100,11 @@ app.get('/api/clientes', authenticateToken, async (req, res) => {
 
 app.post('/api/clientes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION']), async (req, res) => {
   try {
-    const newClient = await prisma.cliente.create({ data: req.body });
+    const data = { ...req.body };
+    if (data.rfc !== undefined) {
+      data.rfc = (data.rfc && data.rfc.trim() !== '') ? data.rfc.trim() : null;
+    }
+    const newClient = await prisma.cliente.create({ data });
     await logAudit(req.user.id, 'CREATE', 'clientes', newClient.id, `Registro cliente: ${newClient.nombreCompleto}`);
     res.status(201).json(newClient);
   } catch (err) {
@@ -111,9 +115,13 @@ app.post('/api/clientes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPC
 app.put('/api/clientes/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION']), async (req, res) => {
   const { id } = req.params;
   try {
+    const data = { ...req.body };
+    if (data.rfc !== undefined) {
+      data.rfc = (data.rfc && data.rfc.trim() !== '') ? data.rfc.trim() : null;
+    }
     const updated = await prisma.cliente.update({
       where: { id },
-      data: req.body
+      data
     });
     await logAudit(req.user.id, 'UPDATE', 'clientes', id, `Modificación cliente: ${updated.nombreCompleto}`);
     res.json(updated);
@@ -397,7 +405,7 @@ app.post('/api/ordenes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCI
             telefono: nuevoCliente.telefono,
             email: nuevoCliente.email || '',
             direccion: nuevoCliente.direccion || '',
-            rfc: nuevoCliente.rfc || ''
+            rfc: (nuevoCliente.rfc && nuevoCliente.rfc.trim() !== '') ? nuevoCliente.rfc.trim() : null
           }
         });
         clienteId = nc.id;
@@ -680,7 +688,11 @@ app.post('/api/cotizaciones', authenticateToken, checkRole(['ADMINISTRADOR', 'GE
       let clienteId = cotData.clienteId;
 
       if (registrarNuevo && nuevoCliente) {
-        const nc = await tx.cliente.create({ data: nuevoCliente });
+        const clientData = { ...nuevoCliente };
+        if (clientData.rfc !== undefined) {
+          clientData.rfc = (clientData.rfc && clientData.rfc.trim() !== '') ? clientData.rfc.trim() : null;
+        }
+        const nc = await tx.cliente.create({ data: clientData });
         clienteId = nc.id;
       }
 
