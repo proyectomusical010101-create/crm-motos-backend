@@ -1,0 +1,55 @@
+{
+  "backupDate": "2026-07-25T02:34:25.816Z",
+  "systemVersion": "1.0.0",
+  "database": "neondb",
+  "tables": {
+    "roles": {
+      "error": "\nInvalid `prisma.rol.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    },
+    "usuarios": {
+      "error": "\nInvalid `prisma.usuario.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    },
+    "clientes": {
+      "error": "\nInvalid `prisma.cliente.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    },
+    "motocicletas": {
+      "error": "\nInvalid `prisma.motocicleta.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    },
+    "tecnicos": {
+      "error": "\nInvalid `prisma.tecnico.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    },
+    "refacciones": {
+      "error": "\nInvalid `prisma.refaccion.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    },
+    "ordenesServicio": {
+      "error": "\nInvalid `prisma.ordenServicio.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    },
+    "ordenesRefaccion": {
+      "error": "\nInvalid `prisma.ordenRefaccion.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    },
+    "garantias": {
+      "error": "\nInvalid `prisma.garantia.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    },
+    "movimientosInventario": {
+      "error": "\nInvalid `prisma.movimientoInventario.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    },
+    "fotografias": {
+      "error": "\nInvalid `prisma.fotografia.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    },
+    "auditorias": {
+      "error": "\nInvalid `prisma.auditoria.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    },
+    "cotizaciones": {
+      "error": "\nInvalid `prisma.cotizacion.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    },
+    "cotizacionesItems": {
+      "error": "\nInvalid `prisma.cotizacionItem.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    },
+    "activaciones": {
+      "error": "\nInvalid `prisma.activacion.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    },
+    "reparacionesSimples": {
+      "error": "\nInvalid `prisma.reparacionSimple.findMany()` invocation:\n\n\nerror: Error validating datasource `db`: You must provide a nonempty URL. The environment variable `DATABASE_URL` resolved to an empty string.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"
+    }
+  }
+}
