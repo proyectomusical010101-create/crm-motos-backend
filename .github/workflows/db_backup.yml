@@ -3,7 +3,7 @@ name: Automated Database Backup
 on:
   schedule:
     # Corre cada 2 días a las 00:00 UTC (8:00 PM hora México)
-    - cron: '0 0 */2 * *'
+      - cron: '0 4,16 * * *'
   workflow_dispatch: # Permite dispararlo de forma manual desde la pestaña Actions en GitHub
 
 permissions:
