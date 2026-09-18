@@ -1,5 +1,5 @@
 {
-  "backupDate": "2026-09-18T08:44:11.400Z",
+  "backupDate": "2026-09-18T18:51:15.582Z",
   "systemVersion": "1.0.0",
   "database": "neondb",
   "tables": {
@@ -23621,28 +23621,6 @@
         "cotizacionItems": "[{\"descripcion\":\"Servicio de Mantenimiento\",\"unidadMedida\":\"Serv\",\"costo\":450,\"manoDeObra\":400,\"tiempoEntrega\":\"\"}]"
       },
       {
-        "id": "27220b51-bd2f-455c-a69a-4465b2d9ea9e",
-        "folio": "OS-2026-0175",
-        "fechaIngreso": "2026-09-10T20:51:04.762Z",
-        "clienteId": "e86e74ab-8a4b-45e7-8367-85388bd40a84",
-        "motocicletaId": "cb525f23-9f08-41af-946f-d9fa47f5f074",
-        "kilometraje": 26574,
-        "tecnicoId": "f885172d-211f-4d2b-8af5-19bf0db51dba",
-        "tipoServicio": "Servicio preventivo",
-        "descripcionFalla": "Realizar cambio de rines de rayos a sello máticos, instalación de luces auxiliares independientes con su interruptor y su porta fusible., adaptación de maletas de la GT 250 con sus respectivas bases.",
-        "diagnosticoTecnico": "",
-        "solucionAplicada": "",
-        "firmaCliente": null,
-        "fechaCompromiso": "2026-09-12T00:00:00.000Z",
-        "fechaEntrega": null,
-        "estado": "En reparación",
-        "tipoAceite": "Mineral",
-        "costoTotal": "9740",
-        "creadoEn": "2026-09-10T20:51:04.762Z",
-        "cotizacionVehiculo": "VENTO Crossmax Rally 300",
-        "cotizacionItems": "[{\"descripcion\":\"Instalación de Luces Auxiliares\",\"unidadMedida\":\"Pza\",\"costo\":0,\"manoDeObra\":800,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Hacer rines sellomáticos \",\"unidadMedida\":\"Pza\",\"costo\":700,\"manoDeObra\":1000,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Maletas  Laterales \",\"unidadMedida\":\"Pza\",\"costo\":5000,\"manoDeObra\":\"\",\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Bases de Maletas Laterales\",\"unidadMedida\":\"Pza\",\"costo\":1000,\"manoDeObra\":\"\",\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Adaptación de Maletas Laterales\",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":700,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Cambio de Batería YB6L-B\",\"unidadMedida\":\"Pza\",\"costo\":540,\"manoDeObra\":\"\",\"tiempoEntrega\":\"Inmediata\"}]"
-      },
-      {
         "id": "56531bd8-8e34-4099-9e3d-e56f1fa40dd6",
         "folio": "OS-2026-0190",
         "fechaIngreso": "2026-09-17T18:18:54.780Z",
@@ -23861,6 +23839,28 @@
         "creadoEn": "2026-09-12T21:32:56.582Z",
         "cotizacionVehiculo": "VELOCI MOTORS BOXTER RT 220R",
         "cotizacionItems": "[{\"descripcion\":\"Servicio Con Aceite Sintético\",\"unidadMedida\":\"Serv\",\"costo\":450,\"manoDeObra\":400,\"tiempoEntrega\":\"\"},{\"descripcion\":\"Cambio de Barras de Suspensión\",\"unidadMedida\":\"Pza\",\"costo\":945,\"manoDeObra\":750,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Cambio de Yugo de Dirección y Tazas Baleros\",\"unidadMedida\":\"Pza\",\"costo\":580,\"manoDeObra\":350,\"tiempoEntrega\":\"Inmediata\"}]"
+      },
+      {
+        "id": "27220b51-bd2f-455c-a69a-4465b2d9ea9e",
+        "folio": "OS-2026-0175",
+        "fechaIngreso": "2026-09-10T20:51:04.762Z",
+        "clienteId": "e86e74ab-8a4b-45e7-8367-85388bd40a84",
+        "motocicletaId": "cb525f23-9f08-41af-946f-d9fa47f5f074",
+        "kilometraje": 26574,
+        "tecnicoId": "f885172d-211f-4d2b-8af5-19bf0db51dba",
+        "tipoServicio": "Servicio preventivo",
+        "descripcionFalla": "Realizar cambio de rines de rayos a sello máticos, instalación de luces auxiliares independientes con su interruptor y su porta fusible., adaptación de maletas de la GT 250 con sus respectivas bases.",
+        "diagnosticoTecnico": "",
+        "solucionAplicada": "",
+        "firmaCliente": null,
+        "fechaCompromiso": "2026-09-12T00:00:00.000Z",
+        "fechaEntrega": null,
+        "estado": "En reparación",
+        "tipoAceite": "Mineral",
+        "costoTotal": "9840",
+        "creadoEn": "2026-09-10T20:51:04.762Z",
+        "cotizacionVehiculo": "VENTO Crossmax Rally 300",
+        "cotizacionItems": "[{\"descripcion\":\"Instalación de Luces Auxiliares\",\"unidadMedida\":\"Pza\",\"costo\":0,\"manoDeObra\":800,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Hacer rines sellomáticos \",\"unidadMedida\":\"Pza\",\"costo\":700,\"manoDeObra\":1000,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Maletas  Laterales \",\"unidadMedida\":\"Pza\",\"costo\":5000,\"manoDeObra\":\"\",\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Bases de Maletas Laterales\",\"unidadMedida\":\"Pza\",\"costo\":1000,\"manoDeObra\":\"\",\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Adaptación de Maletas Laterales\",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":700,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Cambio de Batería 12N7-3B\",\"unidadMedida\":\"Pza\",\"costo\":640,\"manoDeObra\":\"\",\"tiempoEntrega\":\"Inmediata\"}]"
       }
     ],
     "ordenesRefaccion": [],
@@ -32516,6 +32516,15 @@
         "registroId": "569e317c-bad3-45d9-a68e-ca41540e4bc2",
         "detalles": "Modificación de orden: OS-2026-0167",
         "fecha": "2026-09-18T01:13:28.239Z"
+      },
+      {
+        "id": "7e2278de-af72-4b64-b1cd-c479718c0b2e",
+        "usuarioId": "a3b4b8ed-593a-474d-bc2b-2abddeffe98b",
+        "accion": "UPDATE",
+        "tablaAfectada": "ordenes_servicio",
+        "registroId": "27220b51-bd2f-455c-a69a-4465b2d9ea9e",
+        "detalles": "Modificación de orden: OS-2026-0175",
+        "fecha": "2026-09-18T17:28:23.255Z"
       }
     ],
     "cotizaciones": [
