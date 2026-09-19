@@ -1,5 +1,5 @@
 {
-  "backupDate": "2026-09-19T08:30:40.071Z",
+  "backupDate": "2026-09-19T18:24:18.569Z",
   "systemVersion": "1.0.0",
   "database": "neondb",
   "tables": {
@@ -19819,6 +19819,15 @@
         "activo": true
       },
       {
+        "id": "eb4318b3-6ffa-4813-b2f4-cd01752afdde",
+        "nombre": "Eduardo Villaseca Salazar",
+        "especialidad": "General (Usuario CRM)",
+        "telefono": "N/A",
+        "correo": "s.r.motopartes2@gmail.com",
+        "fechaIngreso": "2026-09-11T17:48:07.871Z",
+        "activo": true
+      },
+      {
         "id": "49a33b05-08f4-4bca-9073-0c3984aaf28a",
         "nombre": "Kevin González",
         "especialidad": "General (Usuario CRM)",
@@ -19834,15 +19843,6 @@
         "telefono": "",
         "correo": "laurensmaclaren6@gmail.com",
         "fechaIngreso": "2026-08-15T00:00:00.000Z",
-        "activo": true
-      },
-      {
-        "id": "eb4318b3-6ffa-4813-b2f4-cd01752afdde",
-        "nombre": "Eduardo Villaseca Salazar",
-        "especialidad": "General (Usuario CRM)",
-        "telefono": "N/A",
-        "correo": "s.r.motopartes2@gmail.com",
-        "fechaIngreso": "2026-09-11T17:48:07.871Z",
         "activo": true
       },
       {
@@ -22643,10 +22643,10 @@
         "fechaEntrega": null,
         "estado": "En reparación",
         "tipoAceite": "Mineral",
-        "costoTotal": "400",
+        "costoTotal": "500",
         "creadoEn": "2026-09-05T21:54:20.964Z",
         "cotizacionVehiculo": "BAJAJ Pulsar NS 125",
-        "cotizacionItems": "[{\"descripcion\":\"Cambio de Palanca de Velocidades\",\"unidadMedida\":\"Pza\",\"costo\":0,\"manoDeObra\":150,\"tiempoEntrega\":\"\"},{\"descripcion\":\"Reparación de Slider Izq. \",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":250,\"tiempoEntrega\":\"Inmediata\"}]"
+        "cotizacionItems": "[{\"descripcion\":\"Cambio de Palanca de Velocidades\",\"unidadMedida\":\"Pza\",\"costo\":0,\"manoDeObra\":150,\"tiempoEntrega\":\"\"},{\"descripcion\":\"Reparación de Slider Izq. \",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":250,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Cambio de Espejo Izquierdo\",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":100,\"tiempoEntrega\":\"Inmediata\"}]"
       },
       {
         "id": "09ae2051-ad32-4d16-9c8a-ee911381fe8f",
@@ -23837,28 +23837,6 @@
         "cotizacionItems": "[{\"descripcion\":\"SERVICIO DE MANTENIMIENTO\",\"unidadMedida\":\"Serv\",\"costo\":450,\"manoDeObra\":400,\"tiempoEntrega\":\"Inmediata\"}]"
       },
       {
-        "id": "8100b95c-b476-42de-a274-cdeae8b1fba8",
-        "folio": "OS-2026-0199",
-        "fechaIngreso": "2026-09-19T00:13:39.041Z",
-        "clienteId": "5b741d69-d3cc-4195-98cc-a8deab742b36",
-        "motocicletaId": "677d96a0-6af1-4fad-87ff-8e42ef5677e7",
-        "kilometraje": 3511,
-        "tecnicoId": "49a33b05-08f4-4bca-9073-0c3984aaf28a",
-        "tipoServicio": "Instalación de accesorios",
-        "descripcionFalla": "Instalación de CarPlay (Fabricación de Bases metálicas para cámaras), Falso en claxon, Ajuste de Cadena, Parchar llanta trasera, Colocar Tornillo en Pedal de Cabios, Checar mancha de aceite en filtro de aire",
-        "diagnosticoTecnico": "",
-        "solucionAplicada": "",
-        "firmaCliente": null,
-        "fechaCompromiso": "2026-09-21T00:00:00.000Z",
-        "fechaEntrega": null,
-        "estado": "Recibido",
-        "tipoAceite": "Mineral",
-        "costoTotal": "1550",
-        "creadoEn": "2026-09-19T00:13:39.041Z",
-        "cotizacionVehiculo": "VENTO Screamer 300",
-        "cotizacionItems": "[{\"descripcion\":\"Instalación de CarPlay\",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":800,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Fabricación de Bases Metálicas para Cámaras DElantera y Trasera\",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":300,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Parchar Llanta Trasera \",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":250,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Ajuste de Cadena\",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":100,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Colocación de tornillo en Pedal de Cambios\",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":50,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Revisión de Posible derrame de aceite en Filtro de Aire\",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":50,\"tiempoEntrega\":\"Inmediata\"}]"
-      },
-      {
         "id": "e14ee012-ad13-4be1-95b2-dc6831b5906e",
         "folio": "OS-2026-0112",
         "fechaIngreso": "2026-08-11T17:28:49.593Z",
@@ -23989,6 +23967,28 @@
         "creadoEn": "2026-08-18T17:43:33.715Z",
         "cotizacionVehiculo": "MB MOTOS SF 300",
         "cotizacionItems": "[{\"descripcion\":\"Servicio con Sintético\",\"unidadMedida\":\"Pza\",\"costo\":450,\"manoDeObra\":500,\"tiempoEntrega\":\"\"}]"
+      },
+      {
+        "id": "8100b95c-b476-42de-a274-cdeae8b1fba8",
+        "folio": "OS-2026-0199",
+        "fechaIngreso": "2026-09-19T00:13:39.041Z",
+        "clienteId": "5b741d69-d3cc-4195-98cc-a8deab742b36",
+        "motocicletaId": "677d96a0-6af1-4fad-87ff-8e42ef5677e7",
+        "kilometraje": 3511,
+        "tecnicoId": "49a33b05-08f4-4bca-9073-0c3984aaf28a",
+        "tipoServicio": "Instalación de accesorios",
+        "descripcionFalla": "Instalación de CarPlay (Fabricación de Bases metálicas para cámaras), Falso en claxon, Ajuste de Cadena, Parchar llanta trasera, Colocar Tornillo en Pedal de Cabios, Checar mancha de aceite en filtro de aire",
+        "diagnosticoTecnico": "",
+        "solucionAplicada": "",
+        "firmaCliente": null,
+        "fechaCompromiso": "2026-09-21T00:00:00.000Z",
+        "fechaEntrega": null,
+        "estado": "Recibido",
+        "tipoAceite": "Mineral",
+        "costoTotal": "1450",
+        "creadoEn": "2026-09-19T00:13:39.041Z",
+        "cotizacionVehiculo": "VENTO Screamer 300",
+        "cotizacionItems": "[{\"descripcion\":\"Instalación de CarPlay\",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":800,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Fabricación de Bases Metálicas para Cámaras DElantera y Trasera\",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":300,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Parchar Llanta Trasera \",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":250,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Colocación de tornillo en Pedal de Cambios\",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":50,\"tiempoEntrega\":\"Inmediata\"},{\"descripcion\":\"Revisión de Posible derrame de aceite en Filtro de Aire\",\"unidadMedida\":\"Pza\",\"costo\":\"\",\"manoDeObra\":50,\"tiempoEntrega\":\"Inmediata\"}]"
       },
       {
         "id": "424fb82f-da96-42ed-8867-c810d4d89f9b",
@@ -33017,6 +33017,24 @@
         "registroId": "424fb82f-da96-42ed-8867-c810d4d89f9b",
         "detalles": "Modificación de orden: OS-2026-0200",
         "fecha": "2026-09-19T01:36:29.239Z"
+      },
+      {
+        "id": "ee04f438-7e80-4d10-92a5-c6b452ffb5b7",
+        "usuarioId": "a3b4b8ed-593a-474d-bc2b-2abddeffe98b",
+        "accion": "UPDATE",
+        "tablaAfectada": "ordenes_servicio",
+        "registroId": "8100b95c-b476-42de-a274-cdeae8b1fba8",
+        "detalles": "Modificación de orden: OS-2026-0199",
+        "fecha": "2026-09-19T16:17:20.693Z"
+      },
+      {
+        "id": "d5f45267-dc29-4948-84c4-ae844d939abc",
+        "usuarioId": "a3b4b8ed-593a-474d-bc2b-2abddeffe98b",
+        "accion": "UPDATE",
+        "tablaAfectada": "ordenes_servicio",
+        "registroId": "569e317c-bad3-45d9-a68e-ca41540e4bc2",
+        "detalles": "Modificación de orden: OS-2026-0167",
+        "fecha": "2026-09-19T17:25:38.699Z"
       }
     ],
     "cotizaciones": [
