@@ -98,7 +98,7 @@ app.get('/api/clientes', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/clientes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION']), async (req, res) => {
+app.post('/api/clientes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION', 'GERENCIA', 'TECNICO', 'MECANICO_SENIOR']), async (req, res) => {
   try {
     const data = { ...req.body };
     if (data.rfc !== undefined) {
@@ -112,7 +112,7 @@ app.post('/api/clientes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPC
   }
 });
 
-app.put('/api/clientes/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION']), async (req, res) => {
+app.put('/api/clientes/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION', 'GERENCIA']), async (req, res) => {
   const { id } = req.params;
   try {
     const data = { ...req.body };
@@ -130,7 +130,7 @@ app.put('/api/clientes/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'REC
   }
 });
 
-app.delete('/api/clientes/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+app.delete('/api/clientes/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA']), async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.cliente.delete({ where: { id } });
@@ -280,7 +280,7 @@ app.get('/api/motocicletas', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/motocicletas', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION']), async (req, res) => {
+app.post('/api/motocicletas', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION', 'GERENCIA', 'TECNICO', 'MECANICO_SENIOR']), async (req, res) => {
   try {
     const data = { ...req.body };
     if (!data.vin?.trim()) {
@@ -304,7 +304,7 @@ app.post('/api/motocicletas', authenticateToken, checkRole(['ADMINISTRADOR', 'RE
   }
 });
 
-app.put('/api/motocicletas/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION']), async (req, res) => {
+app.put('/api/motocicletas/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION', 'GERENCIA']), async (req, res) => {
   const { id } = req.params;
   try {
     const data = { ...req.body };
@@ -332,7 +332,7 @@ app.put('/api/motocicletas/:id', authenticateToken, checkRole(['ADMINISTRADOR', 
   }
 });
 
-app.delete('/api/motocicletas/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+app.delete('/api/motocicletas/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA']), async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.motocicleta.delete({ where: { id } });
@@ -350,11 +350,18 @@ app.delete('/api/motocicletas/:id', authenticateToken, checkRole(['ADMINISTRADOR
 app.get('/api/ordenes', authenticateToken, async (req, res) => {
   try {
     const data = await prisma.ordenServicio.findMany({
-      include: { cliente: true, motocicleta: true, tecnico: true, refacciones: true }
+      include: { cliente: true, motocicleta: true, tecnico: true, refacciones: true, fotografias: true }
     });
     const parsed = data.map(o => ({
       ...o,
-      cotizacionItems: o.cotizacionItems ? JSON.parse(o.cotizacionItems) : []
+      cotizacionItems: o.cotizacionItems ? JSON.parse(o.cotizacionItems) : [],
+      fotografias: (o.fotografias || []).map(f => ({
+        id: f.id,
+        tipo: f.tipo,
+        url: f.urlImagen,
+        nombre: f.tipo,
+        fecha: f.creadoEn
+      }))
     }));
     res.json(parsed);
   } catch (err) {
@@ -380,17 +387,37 @@ const filterOrdenData = (body) => {
   if (body.estado !== undefined) data.estado = body.estado;
   if (body.tipoAceite !== undefined) data.tipoAceite = body.tipoAceite;
   if (body.costoTotal !== undefined) data.costoTotal = parseFloat(body.costoTotal) || 0;
+  if (body.pagado !== undefined) data.pagado = parseFloat(body.pagado) || 0;
+  if (body.aCuenta !== undefined) data.aCuenta = parseFloat(body.aCuenta) || 0;
   if (body.cotizacionVehiculo !== undefined) data.cotizacionVehiculo = body.cotizacionVehiculo;
   if (body.cotizacionItems !== undefined) {
     data.cotizacionItems = typeof body.cotizacionItems === 'string'
       ? body.cotizacionItems
       : JSON.stringify(body.cotizacionItems);
   }
+  if (body.combustible !== undefined) data.combustible = body.combustible;
+  if (body.conDanos !== undefined) data.conDanos = Boolean(body.conDanos);
+  if (body.conOdometro !== undefined) data.conOdometro = Boolean(body.conOdometro);
+  if (body.espejosCheck !== undefined) data.espejosCheck = Boolean(body.espejosCheck);
+  if (body.bateriaCheck !== undefined) data.bateriaCheck = Boolean(body.bateriaCheck);
+  if (body.herramientaCheck !== undefined) data.herramientaCheck = Boolean(body.herramientaCheck);
+  if (body.tarjetaCircCheck !== undefined) data.tarjetaCircCheck = Boolean(body.tarjetaCircCheck);
+  if (body.horarioEntrega !== undefined) data.horarioEntrega = body.horarioEntrega;
+  if (body.nombreCesve !== undefined) data.nombreCesve = body.nombreCesve;
+  if (body.cesveNo !== undefined) data.cesveNo = body.cesveNo;
+  if (body.preventivoNumero !== undefined) data.preventivoNumero = parseInt(body.preventivoNumero, 10) || 1;
+  if (body.reparacionDetalle !== undefined) data.reparacionDetalle = body.reparacionDetalle;
+  if (body.otroDetalle !== undefined) data.otroDetalle = body.otroDetalle;
+
+  // Auto-registrar fechaEntrega al cambiar a Terminado o Entregado si no viene definida
+  if (['Terminado', 'Entregado'].includes(body.estado) && !data.fechaEntrega) {
+    data.fechaEntrega = new Date();
+  }
 
   return data;
 };
 
-app.post('/api/ordenes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION', 'TECNICO']), async (req, res) => {
+app.post('/api/ordenes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION', 'GERENCIA', 'TECNICO', 'MECANICO_SENIOR']), async (req, res) => {
   const { refacciones, refaccionesUtilizadas, registrarNuevo, nuevoCliente, registrarNuevaMotoParaClienteExistente, nuevaMoto, ...rawBody } = req.body;
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -502,13 +529,37 @@ app.post('/api/ordenes', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCI
         }
       }
 
+      // 4. Vincular fotografías si aplica
+      if (Array.isArray(rawBody.fotografias)) {
+        for (const item of rawBody.fotografias) {
+          const imgUrl = item ? (item.url || item.urlImagen) : null;
+          if (imgUrl) {
+            await tx.fotografia.create({
+              data: {
+                ordenServicioId: order.id,
+                urlImagen: imgUrl,
+                tipo: item.tipo || 'PROCESO'
+              }
+            });
+          }
+        }
+      }
+
       return order;
     });
 
     await logAudit(req.user.id, 'CREATE', 'ordenes_servicio', result.id, `Apertura de orden: ${result.folio}`);
+    const savedFotos = await prisma.fotografia.findMany({ where: { ordenServicioId: result.id } });
     const responseData = {
       ...result,
-      cotizacionItems: result.cotizacionItems ? JSON.parse(result.cotizacionItems) : []
+      cotizacionItems: result.cotizacionItems ? JSON.parse(result.cotizacionItems) : [],
+      fotografias: savedFotos.map(f => ({
+        id: f.id,
+        tipo: f.tipo,
+        url: f.urlImagen,
+        nombre: f.tipo,
+        fecha: f.creadoEn
+      }))
     };
     res.status(201).json(responseData);
   } catch (err) {
@@ -520,6 +571,16 @@ app.put('/api/ordenes/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { refacciones, refaccionesUtilizadas, ...rawBody } = req.body;
   try {
+    const existingOrder = await prisma.ordenServicio.findUnique({
+      where: { id }
+    });
+    if (!existingOrder) {
+      return res.status(404).json({ error: 'Orden de servicio no encontrada' });
+    }
+    if (existingOrder.estado === 'Entregado') {
+      return res.status(400).json({ error: '🔒 No se puede modificar una orden que ya fue entregada y cerrada definitivamente.' });
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       // 1. Filtrar y preparar datos de la orden
       const orderData = filterOrdenData(rawBody);
@@ -550,13 +611,38 @@ app.put('/api/ordenes/:id', authenticateToken, async (req, res) => {
         }
       }
 
+      // 4. Actualizar fotografías si se envían en el body
+      if (Array.isArray(rawBody.fotografias)) {
+        await tx.fotografia.deleteMany({ where: { ordenServicioId: id } });
+        for (const item of rawBody.fotografias) {
+          const imgUrl = item ? (item.url || item.urlImagen) : null;
+          if (imgUrl) {
+            await tx.fotografia.create({
+              data: {
+                ordenServicioId: id,
+                urlImagen: imgUrl,
+                tipo: item.tipo || 'PROCESO'
+              }
+            });
+          }
+        }
+      }
+
       return order;
     });
 
     await logAudit(req.user.id, 'UPDATE', 'ordenes_servicio', id, `Modificación de orden: ${result.folio}`);
+    const updatedFotos = await prisma.fotografia.findMany({ where: { ordenServicioId: id } });
     const responseData = {
       ...result,
-      cotizacionItems: result.cotizacionItems ? JSON.parse(result.cotizacionItems) : []
+      cotizacionItems: result.cotizacionItems ? JSON.parse(result.cotizacionItems) : [],
+      fotografias: updatedFotos.map(f => ({
+        id: f.id,
+        tipo: f.tipo,
+        url: f.urlImagen,
+        nombre: f.tipo,
+        fecha: f.creadoEn
+      }))
     };
     res.json(responseData);
   } catch (err) {
@@ -564,9 +650,19 @@ app.put('/api/ordenes/:id', authenticateToken, async (req, res) => {
   }
 });
 
-app.delete('/api/ordenes/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+app.delete('/api/ordenes/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA']), async (req, res) => {
   const { id } = req.params;
   try {
+    const existingOrder = await prisma.ordenServicio.findUnique({
+      where: { id }
+    });
+    if (!existingOrder) {
+      return res.status(404).json({ error: 'Orden de servicio no encontrada' });
+    }
+    if (existingOrder.estado === 'Entregado') {
+      return res.status(400).json({ error: '🔒 No se puede eliminar una orden que ya fue entregada y cerrada definitivamente.' });
+    }
+
     const deleted = await prisma.ordenServicio.delete({
       where: { id }
     });
@@ -681,7 +777,7 @@ app.get('/api/cotizaciones', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/cotizaciones', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA', 'TECNICO']), async (req, res) => {
+app.post('/api/cotizaciones', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA', 'TECNICO', 'MECANICO_SENIOR']), async (req, res) => {
   const { cotizacionItems, registrarNuevo, nuevoCliente, ...cotData } = req.body;
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -744,7 +840,7 @@ app.post('/api/cotizaciones', authenticateToken, checkRole(['ADMINISTRADOR', 'GE
   }
 });
 
-app.put('/api/cotizaciones/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA', 'TECNICO']), async (req, res) => {
+app.put('/api/cotizaciones/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA', 'TECNICO', 'MECANICO_SENIOR']), async (req, res) => {
   const { id } = req.params;
   const { cotizacionItems, ...cotData } = req.body;
   try {
@@ -772,7 +868,7 @@ app.put('/api/cotizaciones/:id', authenticateToken, checkRole(['ADMINISTRADOR', 
   }
 });
 
-app.delete('/api/cotizaciones/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+app.delete('/api/cotizaciones/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA']), async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.cotizacion.delete({ where: { id } });
@@ -787,16 +883,19 @@ app.delete('/api/cotizaciones/:id', authenticateToken, checkRole(['ADMINISTRADOR
 // API REST: TÉCNICOS
 // ==========================================
 
-// Helper para sincronizar automáticamente usuarios de rol 'TECNICO' hacia el catálogo de técnicos
+// Helper para sincronizar automáticamente usuarios de rol 'TECNICO' y 'MECANICO_SENIOR' hacia el catálogo de técnicos
 const syncTechnicians = async () => {
   try {
-    const tecnicoRol = await prisma.rol.findFirst({
-      where: { nombre: 'TECNICO' }
+    const techRoles = await prisma.rol.findMany({
+      where: {
+        nombre: { in: ['TECNICO', 'MECANICO_SENIOR', 'MECANICO SENIOR'] }
+      }
     });
-    if (!tecnicoRol) return;
+    if (!techRoles.length) return;
+    const roleIds = techRoles.map(r => r.id);
 
     const techUsers = await prisma.usuario.findMany({
-      where: { rolId: tecnicoRol.id }
+      where: { rolId: { in: roleIds } }
     });
 
     for (const user of techUsers) {
@@ -847,7 +946,7 @@ app.get('/api/tecnicos', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/tecnicos', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+app.post('/api/tecnicos', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA']), async (req, res) => {
   try {
     const data = { ...req.body };
     if (data.fechaIngreso) {
@@ -861,7 +960,7 @@ app.post('/api/tecnicos', authenticateToken, checkRole(['ADMINISTRADOR']), async
   }
 });
 
-app.put('/api/tecnicos/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+app.put('/api/tecnicos/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA']), async (req, res) => {
   const { id } = req.params;
   try {
     const data = { ...req.body };
@@ -879,7 +978,7 @@ app.put('/api/tecnicos/:id', authenticateToken, checkRole(['ADMINISTRADOR']), as
   }
 });
 
-app.delete('/api/tecnicos/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+app.delete('/api/tecnicos/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA']), async (req, res) => {
   const { id } = req.params;
   try {
     // 1. Intentar eliminación física de la base de datos
@@ -914,7 +1013,7 @@ app.delete('/api/tecnicos/:id', authenticateToken, checkRole(['ADMINISTRADOR']),
 
 app.get('/api/reparaciones-simples', authenticateToken, async (req, res) => {
   try {
-    const isTech = req.user.rol === 'TECNICO';
+    const isTech = ['TECNICO', 'MECANICO_SENIOR'].includes(req.user.rol);
     const where = isTech ? { tecnicoId: req.user.id } : {};
     
     const data = await prisma.reparacionSimple.findMany({
@@ -935,7 +1034,7 @@ app.get('/api/reparaciones-simples', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/reparaciones-simples', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+app.post('/api/reparaciones-simples', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA', 'TECNICO', 'MECANICO_SENIOR']), async (req, res) => {
   const { descripcion, monto, tecnicoId, fecha } = req.body;
   if (!descripcion || monto === undefined || !tecnicoId) {
     return res.status(400).json({ error: 'Descripción, monto y técnico son obligatorios.' });
@@ -963,7 +1062,7 @@ app.post('/api/reparaciones-simples', authenticateToken, checkRole(['ADMINISTRAD
   }
 });
 
-app.put('/api/reparaciones-simples/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+app.put('/api/reparaciones-simples/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA']), async (req, res) => {
   const { id } = req.params;
   const { descripcion, monto, tecnicoId, fecha } = req.body;
 
@@ -989,7 +1088,7 @@ app.put('/api/reparaciones-simples/:id', authenticateToken, checkRole(['ADMINIST
   }
 });
 
-app.delete('/api/reparaciones-simples/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+app.delete('/api/reparaciones-simples/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA']), async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -1024,7 +1123,7 @@ app.get('/api/activaciones', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/activaciones', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION', 'TECNICO']), async (req, res) => {
+app.post('/api/activaciones', authenticateToken, checkRole(['ADMINISTRADOR', 'RECEPCION', 'GERENCIA', 'TECNICO', 'MECANICO_SENIOR']), async (req, res) => {
   const { vin } = req.body;
   try {
     // Verificar si ya está activado ese VIN
@@ -1053,7 +1152,7 @@ app.post('/api/activaciones', authenticateToken, checkRole(['ADMINISTRADOR', 'RE
   }
 });
 
-app.delete('/api/activaciones/:id', authenticateToken, checkRole(['ADMINISTRADOR']), async (req, res) => {
+app.delete('/api/activaciones/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA']), async (req, res) => {
   const { id } = req.params;
   try {
     const deleted = await prisma.activacion.delete({

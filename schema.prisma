@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Rol {
@@ -128,9 +129,24 @@ model OrdenServicio {
   estado             String           @default("Recibido")
   tipoAceite         String?          @default("Mineral") @map("tipo_aceite")
   costoTotal         Decimal          @default(0) @map("costo_total") @db.Decimal(10, 2)
+  pagado             Decimal          @default(0) @map("pagado") @db.Decimal(10, 2)
+  aCuenta            Decimal          @default(0) @map("a_cuenta") @db.Decimal(10, 2)
   creadoEn           DateTime         @default(now()) @map("creado_en")
   cotizacionVehiculo String?          @map("cotizacion_vehiculo")
   cotizacionItems    String?          @map("cotizacion_items")
+  combustible        String?          @default("1/2") @map("combustible")
+  conDanos           Boolean          @default(false) @map("con_danos")
+  conOdometro        Boolean          @default(true) @map("con_odometro")
+  espejosCheck       Boolean          @default(false) @map("espejos_check")
+  bateriaCheck       Boolean          @default(false) @map("bateria_check")
+  herramientaCheck   Boolean          @default(false) @map("herramienta_check")
+  tarjetaCircCheck   Boolean          @default(false) @map("tarjeta_circ_check")
+  horarioEntrega     String?          @default("16:00") @map("horario_entrega")
+  nombreCesve        String?          @default("Cesve Vento Norte") @map("nombre_cesve")
+  cesveNo            String?          @default("CES-9382") @map("cesve_no")
+  preventivoNumero   Int?             @default(1) @map("preventivo_numero")
+  reparacionDetalle  String?          @map("reparacion_detalle")
+  otroDetalle        String?          @map("otro_detalle")
   fotografias        Fotografia[]
   garantias          Garantia[]
   refacciones        OrdenRefaccion[]
