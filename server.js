@@ -1309,6 +1309,159 @@ app.delete('/api/usuarios/:id', authenticateToken, checkRole(['ADMINISTRADOR']),
 });
 
 // ==========================================
+// API REST: CITAS DE SERVICIO (Públicas y Administrativas)
+// ==========================================
+
+// Endpoint Público: Para que los clientes agenden citas desde el link externo
+app.post('/api/citas/public', async (req, res) => {
+  const { nombreCompleto, telefono, marca, modelo, fecha, hora, motivo, notas } = req.body;
+
+  if (!nombreCompleto || !telefono || !marca || !modelo || !fecha || !hora) {
+    return res.status(400).json({ error: 'Todos los campos obligatorios deben ser completados.' });
+  }
+
+  try {
+    const count = await prisma.cita.count();
+    const folio = `CTA-${String(count + 1).padStart(3, '0')}`;
+    const fechaObj = new Date(fecha + 'T00:00:00Z');
+
+    const nuevaCita = await prisma.cita.create({
+      data: {
+        folio,
+        nombreCompleto: nombreCompleto.trim(),
+        telefono: telefono.trim(),
+        marca: marca.trim().toUpperCase(),
+        modelo: modelo.trim(),
+        fecha: fechaObj,
+        hora: hora.trim(),
+        motivo: motivo ? motivo.trim() : 'Mantenimiento / Revisión',
+        notas: notas ? notas.trim() : null,
+        estado: 'Pendiente'
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      cita: {
+        ...nuevaCita,
+        fecha: nuevaCita.fecha.toISOString().split('T')[0]
+      }
+    });
+  } catch (err) {
+    console.error('Error al registrar cita pública:', err);
+    res.status(500).json({ error: 'Error al procesar la cita: ' + err.message });
+  }
+});
+
+// Endpoint Administrativo: Obtener listado de citas
+app.get('/api/citas', authenticateToken, async (req, res) => {
+  try {
+    const citas = await prisma.cita.findMany({
+      orderBy: [
+        { fecha: 'desc' },
+        { creadoEn: 'desc' }
+      ]
+    });
+
+    const formatted = citas.map(c => ({
+      ...c,
+      fecha: c.fecha.toISOString().split('T')[0]
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Endpoint Administrativo: Crear cita manualmente desde el panel
+app.post('/api/citas', authenticateToken, async (req, res) => {
+  const { nombreCompleto, telefono, marca, modelo, fecha, hora, motivo, notas, estado } = req.body;
+
+  if (!nombreCompleto || !telefono || !marca || !modelo || !fecha || !hora) {
+    return res.status(400).json({ error: 'Todos los campos obligatorios deben ser completados.' });
+  }
+
+  try {
+    const count = await prisma.cita.count();
+    const folio = `CTA-${String(count + 1).padStart(3, '0')}`;
+    const fechaObj = new Date(fecha + 'T00:00:00Z');
+
+    const nuevaCita = await prisma.cita.create({
+      data: {
+        folio,
+        nombreCompleto: nombreCompleto.trim(),
+        telefono: telefono.trim(),
+        marca: marca.trim().toUpperCase(),
+        modelo: modelo.trim(),
+        fecha: fechaObj,
+        hora: hora.trim(),
+        motivo: motivo ? motivo.trim() : 'Mantenimiento / Revisión',
+        notas: notas ? notas.trim() : null,
+        estado: estado || 'Confirmada'
+      }
+    });
+
+    await logAudit(req.user.id, 'CREATE', 'citas', nuevaCita.id, `Cita agendada: ${nuevaCita.folio} (${nuevaCita.nombreCompleto})`);
+
+    res.status(201).json({
+      ...nuevaCita,
+      fecha: nuevaCita.fecha.toISOString().split('T')[0]
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Endpoint Administrativo: Actualizar cita (estado, reprogramación, etc.)
+app.put('/api/citas/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { estado, fecha, hora, motivo, notas, nombreCompleto, telefono, marca, modelo } = req.body;
+
+  try {
+    const updateData = {};
+    if (estado !== undefined) updateData.estado = estado;
+    if (fecha !== undefined) updateData.fecha = new Date(fecha + 'T00:00:00Z');
+    if (hora !== undefined) updateData.hora = hora;
+    if (motivo !== undefined) updateData.motivo = motivo;
+    if (notas !== undefined) updateData.notas = notas;
+    if (nombreCompleto !== undefined) updateData.nombreCompleto = nombreCompleto;
+    if (telefono !== undefined) updateData.telefono = telefono;
+    if (marca !== undefined) updateData.marca = marca.toUpperCase();
+    if (modelo !== undefined) updateData.modelo = modelo;
+
+    const updated = await prisma.cita.update({
+      where: { id },
+      data: updateData
+    });
+
+    await logAudit(req.user.id, 'UPDATE', 'citas', id, `Cita actualizada: ${updated.folio} Estado: ${updated.estado}`);
+
+    res.json({
+      ...updated,
+      fecha: updated.fecha.toISOString().split('T')[0]
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Endpoint Administrativo: Eliminar cita
+app.delete('/api/citas/:id', authenticateToken, checkRole(['ADMINISTRADOR', 'GERENCIA']), async (req, res) => {
+  const { id } = req.params;
+  try {
+    const deleted = await prisma.cita.delete({
+      where: { id }
+    });
+
+    await logAudit(req.user.id, 'DELETE', 'citas', id, `Cita eliminada: ${deleted.folio}`);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// ==========================================
 // INICIO DEL SERVIDOR DE PRODUCCIÓN
 // ==========================================
 

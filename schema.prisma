@@ -293,3 +293,19 @@ model ReparacionSimple {
   @@map("reparaciones_simples")
 }
 
+model Cita {
+  id             String   @id @default(uuid())
+  folio          String   @unique
+  nombreCompleto String   @map("nombre_completo")
+  telefono       String
+  marca          String
+  modelo         String
+  fecha          DateTime @db.Date
+  hora           String
+  motivo         String?
+  notas          String?
+  estado         String   @default("Pendiente")
+  creadoEn       DateTime @default(now()) @map("creado_en")
+
+  @@map("citas")
+}
