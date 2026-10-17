@@ -16,6 +16,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'crm_motos_secret_key_2026';
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Permitir firmas base64 y fotos en JSON
 
+// Health check / Keep-Alive para evitar que Render se duerma
+app.get('/ping', (req, res) => {
+  res.json({ status: 'ok', serverTime: new Date().toISOString() });
+});
+
 // ==========================================
 // MIDDLEWARES DE SEGURIDAD Y ROLES
 // ==========================================
@@ -74,7 +79,7 @@ app.post('/api/auth/login', async (req, res) => {
     const token = jwt.sign(
       { id: user.id, nombre: user.nombre, rol: user.rol.nombre },
       JWT_SECRET,
-      { expiresIn: '12h' }
+      { expiresIn: '365d' }
     );
 
     res.json({ token, user: { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol.nombre } });
@@ -577,7 +582,7 @@ app.put('/api/ordenes/:id', authenticateToken, async (req, res) => {
     if (!existingOrder) {
       return res.status(404).json({ error: 'Orden de servicio no encontrada' });
     }
-    if (existingOrder.estado === 'Entregado') {
+    if (existingOrder.estado === 'Entregado' && !['ADMINISTRADOR', 'GERENCIA'].includes(req.user.rol)) {
       return res.status(400).json({ error: '🔒 No se puede modificar una orden que ya fue entregada y cerrada definitivamente.' });
     }
 
@@ -1312,6 +1317,31 @@ app.delete('/api/usuarios/:id', authenticateToken, checkRole(['ADMINISTRADOR']),
 // API REST: CITAS DE SERVICIO (Públicas y Administrativas)
 // ==========================================
 
+// Helper para generar folios únicos de citas garantizando que nunca colisionen
+const generateNextCitaFolio = async () => {
+  const allCitas = await prisma.cita.findMany({
+    select: { folio: true }
+  });
+  let maxNum = 0;
+  allCitas.forEach(c => {
+    const match = (c.folio || '').match(/CTA-(\d+)/i);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num) && num > maxNum) {
+        maxNum = num;
+      }
+    }
+  });
+  let nextNum = maxNum + 1;
+  let candidateFolio = `CTA-${String(nextNum).padStart(3, '0')}`;
+  
+  while (await prisma.cita.findUnique({ where: { folio: candidateFolio } })) {
+    nextNum++;
+    candidateFolio = `CTA-${String(nextNum).padStart(3, '0')}`;
+  }
+  return candidateFolio;
+};
+
 // Endpoint Público: Para que los clientes agenden citas desde el link externo
 app.post('/api/citas/public', async (req, res) => {
   const { nombreCompleto, telefono, marca, modelo, fecha, hora, motivo, notas } = req.body;
@@ -1321,8 +1351,7 @@ app.post('/api/citas/public', async (req, res) => {
   }
 
   try {
-    const count = await prisma.cita.count();
-    const folio = `CTA-${String(count + 1).padStart(3, '0')}`;
+    const folio = await generateNextCitaFolio();
     const fechaObj = new Date(fecha + 'T00:00:00Z');
 
     const nuevaCita = await prisma.cita.create({
@@ -1383,8 +1412,7 @@ app.post('/api/citas', authenticateToken, async (req, res) => {
   }
 
   try {
-    const count = await prisma.cita.count();
-    const folio = `CTA-${String(count + 1).padStart(3, '0')}`;
+    const folio = await generateNextCitaFolio();
     const fechaObj = new Date(fecha + 'T00:00:00Z');
 
     const nuevaCita = await prisma.cita.create({
