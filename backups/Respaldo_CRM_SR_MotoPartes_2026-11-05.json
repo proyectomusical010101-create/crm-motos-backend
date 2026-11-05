@@ -1,5 +1,5 @@
 {
-  "backupDate": "2026-11-05T11:50:46.139Z",
+  "backupDate": "2026-11-05T21:45:54.929Z",
   "systemVersion": "1.0.0",
   "database": "neondb",
   "tables": {
@@ -47478,6 +47478,15 @@
         "registroId": "d1a69611-be63-40e0-a4ec-76c376850018",
         "detalles": "Modificación de orden: OS-2026-0300",
         "fecha": "2026-11-05T01:38:11.045Z"
+      },
+      {
+        "id": "a2352644-94a1-44e9-8cd3-18bc2dc1d4e3",
+        "usuarioId": "a3b4b8ed-593a-474d-bc2b-2abddeffe98b",
+        "accion": "CREATE",
+        "tablaAfectada": "reparaciones_simples",
+        "registroId": "85419fa3-abbf-4a48-a70a-65814a38415f",
+        "detalles": "Asignación de reparación simple: Instalación de sliders al técnico ID: 49a33b05-08f4-4bca-9073-0c3984aaf28a",
+        "fecha": "2026-11-05T16:23:20.758Z"
       }
     ],
     "cotizaciones": [
@@ -47815,6 +47824,15 @@
         "creadoPorId": "e2dd49be-0919-4607-9a0a-b92c94e985d1",
         "fecha": "2026-10-27T00:00:00.000Z",
         "creadoEn": "2026-10-27T22:20:42.081Z"
+      },
+      {
+        "id": "85419fa3-abbf-4a48-a70a-65814a38415f",
+        "descripcion": "Instalación de sliders",
+        "monto": "200",
+        "tecnicoId": "49a33b05-08f4-4bca-9073-0c3984aaf28a",
+        "creadoPorId": "a3b4b8ed-593a-474d-bc2b-2abddeffe98b",
+        "fecha": "2026-11-05T00:00:00.000Z",
+        "creadoEn": "2026-11-05T16:23:20.706Z"
       }
     ]
   }
