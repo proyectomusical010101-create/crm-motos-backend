@@ -1,5 +1,5 @@
 {
-  "backupDate": "2026-11-24T02:44:32.808Z",
+  "backupDate": "2026-11-24T14:32:06.825Z",
   "systemVersion": "1.0.0",
   "database": "neondb",
   "tables": {
@@ -22035,33 +22035,6 @@
         "activo": true
       },
       {
-        "id": "eb4318b3-6ffa-4813-b2f4-cd01752afdde",
-        "nombre": "Eduardo Villaseca Salazar",
-        "especialidad": "General (Usuario CRM)",
-        "telefono": "N/A",
-        "correo": "s.r.motopartes2@gmail.com",
-        "fechaIngreso": "2026-09-11T17:48:07.871Z",
-        "activo": false
-      },
-      {
-        "id": "49a33b05-08f4-4bca-9073-0c3984aaf28a",
-        "nombre": "KEVIN GONZALEZ",
-        "especialidad": "General (Usuario CRM)",
-        "telefono": "N/A",
-        "correo": "s.r.motopartes02@gmail.com",
-        "fechaIngreso": "2026-06-17T17:45:44.900Z",
-        "activo": false
-      },
-      {
-        "id": "fbd87c40-e201-4240-b308-dbfd527d6713",
-        "nombre": "Carlos Ortiz (Técnico de Prueba)",
-        "especialidad": "Mantenimiento General (Pruebas)",
-        "telefono": "5500000000",
-        "correo": "tecnico.prueba@crmmotos.com",
-        "fechaIngreso": "2026-10-03T06:31:12.469Z",
-        "activo": false
-      },
-      {
         "id": "1299e439-5c83-49c1-9521-76e21cb94364",
         "nombre": "Reynier Tamayo",
         "especialidad": "General (Usuario CRM)",
@@ -22087,6 +22060,33 @@
         "correo": "abu524594@gmail.com",
         "fechaIngreso": "2026-11-18T19:11:47.049Z",
         "activo": true
+      },
+      {
+        "id": "eb4318b3-6ffa-4813-b2f4-cd01752afdde",
+        "nombre": "Eduardo Villaseca Salazar",
+        "especialidad": "General (Usuario CRM)",
+        "telefono": "N/A",
+        "correo": "s.r.motopartes2@gmail.com",
+        "fechaIngreso": "2026-09-11T17:48:07.871Z",
+        "activo": false
+      },
+      {
+        "id": "49a33b05-08f4-4bca-9073-0c3984aaf28a",
+        "nombre": "KEVIN GONZALEZ",
+        "especialidad": "General (Usuario CRM)",
+        "telefono": "N/A",
+        "correo": "s.r.motopartes02@gmail.com",
+        "fechaIngreso": "2026-06-17T17:45:44.900Z",
+        "activo": false
+      },
+      {
+        "id": "fbd87c40-e201-4240-b308-dbfd527d6713",
+        "nombre": "Carlos Ortiz (Técnico de Prueba)",
+        "especialidad": "Mantenimiento General (Pruebas)",
+        "telefono": "5500000000",
+        "correo": "tecnico.prueba@crmmotos.com",
+        "fechaIngreso": "2026-10-03T06:31:12.469Z",
+        "activo": false
       }
     ],
     "refacciones": [
