@@ -1,5 +1,5 @@
 {
-  "backupDate": "2026-11-27T00:17:25.088Z",
+  "backupDate": "2026-11-27T13:28:14.018Z",
   "systemVersion": "1.0.0",
   "database": "neondb",
   "tables": {
@@ -22221,15 +22221,6 @@
         "activo": true
       },
       {
-        "id": "fbd87c40-e201-4240-b308-dbfd527d6713",
-        "nombre": "Carlos Ortiz (Técnico de Prueba)",
-        "especialidad": "Mantenimiento General (Pruebas)",
-        "telefono": "5500000000",
-        "correo": "tecnico.prueba@crmmotos.com",
-        "fechaIngreso": "2026-10-03T06:31:12.469Z",
-        "activo": false
-      },
-      {
         "id": "1299e439-5c83-49c1-9521-76e21cb94364",
         "nombre": "Reynier Tamayo",
         "especialidad": "General (Usuario CRM)",
@@ -22272,6 +22263,15 @@
         "telefono": "N/A",
         "correo": "s.r.motopartes02@gmail.com",
         "fechaIngreso": "2026-06-17T17:45:44.900Z",
+        "activo": false
+      },
+      {
+        "id": "fbd87c40-e201-4240-b308-dbfd527d6713",
+        "nombre": "Carlos Ortiz (Técnico de Prueba)",
+        "especialidad": "Mantenimiento General (Pruebas)",
+        "telefono": "5500000000",
+        "correo": "tecnico.prueba@crmmotos.com",
+        "fechaIngreso": "2026-10-03T06:31:12.469Z",
         "activo": false
       }
     ],
